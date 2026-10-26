@@ -59,10 +59,10 @@ static class Program
     {
         string ev = Field(msg, "event"), action = Field(msg, "action"), context = Field(msg, "context");
         string device = Field(msg, "device");
-        if (ev == "deviceDidConnect" && device != null) Lights.DeviceConnected(device);
-        else if (ev == "deviceDidDisconnect" && device != null) Lights.DeviceDisconnected(device);
-        else if (ev == "systemDidWakeUp") ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(3000); Lights.Apply(); });
+        if (ev == "systemDidWakeUp") ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(3000); Lights.Apply(); });
         if (ev == null || action == null || context == null || !action.StartsWith(Prefix)) return;
+        if (ev == "willAppear" && device != null) Lights.KeyAppeared(device, action, context);
+        else if (ev == "willDisappear") Lights.KeyDisappeared(context);
         string name = action.Substring(Prefix.Length);
         if (name.StartsWith(Displays.Group)) Displays.Handle(ev, name.Substring(Displays.Group.Length), context);
         else if (name.StartsWith(Audio.Group)) Audio.Handle(ev, name.Substring(Audio.Group.Length), context);

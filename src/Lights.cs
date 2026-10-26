@@ -2,7 +2,8 @@
 // Кнопка «Подсветка» листает палитру (последний пункт — выключить); на клавише кольцо из 18 точек текущего цвета.
 // Выбор хранится в %APPDATA%\megarohas_deck\lights.json и ставится заново при подключении деки и после сна.
 // Команду подсмотрел в плагине магазина RGB Control (com.mirabox.streamdock.lampControlD6): sendToDevice
-// с массивом [65, 100, 18, r,g,b × 18] — 18 светодиодов.
+// с массивом [65, 100, 18, r,g,b × 18] — 18 светодиодов. Софт принимает её только с context живой кнопки
+// плагина на этой деке (по нему ищет профиль), поэтому цвет ставится, когда появляется любая наша кнопка.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -19,6 +20,7 @@ static class Lights
 
     static readonly int[][] Palette =
     {
+        new[] { 255, 255, 255 }, // белый — по умолчанию
         new[] { 0, 170, 255 },   // голубой лёд
         new[] { 20, 60, 255 },   // синий
         new[] { 130, 30, 255 },  // фиолетовый
@@ -27,14 +29,14 @@ static class Lights
         new[] { 255, 80, 0 },    // оранжевый
         new[] { 255, 160, 0 },   // янтарь
         new[] { 0, 255, 60 },    // зелёный
-        new[] { 255, 255, 255 }, // белый
         new[] { 0, 0, 0 },       // выключено
     };
 
     static readonly string settingsPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "megarohas_deck", "lights.json");
     static readonly object sync = new object();
-    static readonly HashSet<string> devices = new HashSet<string>();
+    // context любой нашей кнопки → (дека, action): от её имени и шлём команду.
+    static readonly Dictionary<string, string[]> anchors = new Dictionary<string, string[]>();
     static readonly HashSet<string> keys = new HashSet<string>();
     static int index = Load();
 
@@ -59,46 +61,53 @@ static class Lights
         }
     }
 
-    // Дека подключилась (в том числе при запуске софта) — ставим цвет сразу и ещё раз чуть позже:
-    // при подключении софт может сам выставить заводской эффект.
-    public static void DeviceConnected(string device)
+    // Появилась любая наша кнопка. Первая на деке (запуск софта, подключение деки) — ставим цвет сразу
+    // и ещё раз чуть позже: при подключении софт может сам выставить заводской эффект.
+    public static void KeyAppeared(string device, string action, string context)
     {
-        lock (sync) devices.Add(device);
+        bool first;
+        lock (sync)
+        {
+            first = true;
+            foreach (var a in anchors.Values) if (a[0] == device) first = false;
+            anchors[context] = new[] { device, action };
+        }
+        if (!first) return;
         Apply();
         ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(3000); Apply(); });
     }
 
-    public static void DeviceDisconnected(string device)
+    public static void KeyDisappeared(string context)
     {
-        lock (sync) devices.Remove(device);
+        lock (sync) anchors.Remove(context);
     }
 
     public static void Apply()
     {
         int[] color;
-        string[] targets;
+        var targets = new Dictionary<string, KeyValuePair<string, string[]>>();  // дека → (context, (дека, action))
         lock (sync)
         {
             color = Palette[index];
-            targets = new string[devices.Count];
-            devices.CopyTo(targets);
+            foreach (var a in anchors)
+                if (!targets.ContainsKey(a.Value[0])) targets[a.Value[0]] = a;
         }
         var leds = new List<int> { 65, 100, Leds };
         for (int i = 0; i < Leds; i++) leds.AddRange(color);
-        foreach (var device in targets)
+        foreach (var target in targets)
         {
             Program.Send(new
             {
                 @event = "sendToDevice",
-                action = Program.Prefix + Group + "color",
-                context = "",
+                action = target.Value.Value[1],
+                context = target.Value.Key,
                 payload = new
                 {
                     device = new { vid = 12610, pid = 7, serialNumber = "" },  // AmpliGame D6
                     controlType = "lampControl",
                     lampType = "",
                     lampControlArray = leds,
-                    deviceID = device,
+                    deviceID = target.Key,
                     Dependence = "device",
                 },
             });
