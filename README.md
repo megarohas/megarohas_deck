@@ -1,86 +1,237 @@
-﻿# megarohas deck
+﻿<p align="center"><img src="docs/cover.png" alt="megarohas deck — StreamDock plugin for fifine AmpliGame D6" width="100%"></p>
 
-Личный плагин для стрим-деки **fifine AmpliGame D6** (софт fifine Control Deck). Подойдёт и к другим
-декам на движке Mirabox StreamDock. В списке действий софта все кнопки лежат в категории **megarohas**.
+<p align="center">
+  <a href="https://github.com/megarohas/megarohas_deck/releases/latest"><img src="https://img.shields.io/github/v/release/megarohas/megarohas_deck?style=flat-square&color=8b5cf6" alt="Release"></a>
+  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows 10 | 11">
+  <img src="https://img.shields.io/badge/StreamDock-fifine%20AmpliGame%20D6-22d3ee?style=flat-square" alt="fifine AmpliGame D6">
+  <img src="https://img.shields.io/badge/.NET%20Framework-4.x-512BD4?style=flat-square&logo=dotnet&logoColor=white" alt=".NET Framework 4.x">
+  <img src="https://img.shields.io/badge/dependencies-zero-10b981?style=flat-square" alt="Zero dependencies">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/megarohas/megarohas_deck?style=flat-square&color=f59e0b" alt="MIT"></a>
+</p>
 
-## Экраны
+<p align="center"><b>English</b> · <a href="#русский">Русский</a></p>
 
-Кнопки режима проецирования, то же, что **Win+P**:
+# megarohas deck
 
-| Кнопка | Режим |
+A plugin for the **fifine AmpliGame D6** stream controller (and other decks running the **Mirabox StreamDock** software)
+that turns it into a couch-and-desk remote for a Windows gaming PC. Every key **shows the real state**: the active
+screen mode lights up, the volume keys draw a level bar, the record key turns red and counts time, Big Picture and
+Xbox mode glow while they are open — even when you changed something with the keyboard instead of the deck.
+
+One small `.exe`, no runtime to install (it uses the .NET Framework that ships with Windows), no background services.
+
+## Keys
+
+All keys live in the **megarohas** category of the deck software; drag them anywhere.
+
+### Screens — like Win+P, but one tap
+
+| Key | What it does |
 |---|---|
-| ![](com.megarohas.deck.sdPlugin/images/internal_on.png) **Только монитор** | только экран компьютера |
-| ![](com.megarohas.deck.sdPlugin/images/external_on.png) **Только ТВ** | только второй экран |
-| ![](com.megarohas.deck.sdPlugin/images/extend_on.png) **Расширить** | рабочий стол на оба экрана |
-| ![](com.megarohas.deck.sdPlugin/images/clone_on.png) **Дублировать** | одна картинка на обоих |
+| <img src="com.megarohas.deck.sdPlugin/images/internal_on.png" width="56"> **Monitor only** | picture on the PC monitor only |
+| <img src="com.megarohas.deck.sdPlugin/images/external_on.png" width="56"> **TV only** | picture on the second screen (TV) only |
+| <img src="com.megarohas.deck.sdPlugin/images/extend_on.png" width="56"> **Extend** | desktop across both screens |
+| <img src="com.megarohas.deck.sdPlugin/images/clone_on.png" width="56"> **Duplicate** | the same picture on both |
 
-Кнопка текущего режима горит, остальные тусклые. Режим проверяется раз в секунду, так что
-подсветка следует и за Win+P. Если переключиться не вышло (например, ТВ отключён), на кнопке мигает значок ошибки.
+The key of the current mode is lit and follows changes made with Win+P. If a switch fails (TV off), the key shows an alert.
 
-## Громкость
+### Volume
+
+| Key | What it does |
+|---|---|
+| <img src="com.megarohas.deck.sdPlugin/images/mute_on.png" width="56"> **Mute** | mute / unmute; turns red while muted |
+| <img src="com.megarohas.deck.sdPlugin/images/volume_down.png" width="56"> **Volume down** | −2 %, hold to keep going; the bar shows the level |
+| <img src="com.megarohas.deck.sdPlugin/images/volume_up.png" width="56"> **Volume up** | +2 %, hold to keep going |
+
+Works with whatever output is the default right now (TV, headphones…).
+
+### Recording
+
+<img src="com.megarohas.deck.sdPlugin/images/record_off.png" width="56"> **Record screen** — one tap to start recording the
+main screen with **OBS without opening its window**: OBS is started minimized to the tray if needed, switched to a
+`deck_record` scene for the recording and switched back afterwards. The key turns red with a running timer.
+Needs OBS 28+ with the built-in WebSocket server enabled (*Tools → WebSocket Server Settings*); the plugin reads the
+password from OBS's own config, nothing to type.
+
+### Gaming modes
+
+| Key | What it does |
+|---|---|
+| <img src="com.megarohas.deck.sdPlugin/images/bigpicture_on.png" width="56"> **Steam Big Picture** | open / close Big Picture; lit while it is open |
+| <img src="com.megarohas.deck.sdPlugin/images/xbox_mode_on.png" width="56"> **Xbox mode** | toggle Windows 11 Xbox mode (formerly Xbox Full Screen Experience); lit while it is on |
+| <img src="com.megarohas.deck.sdPlugin/images/couch_bigpicture.png" width="56"> **Couch: Big Picture** | TV only → Big Picture |
+| <img src="com.megarohas.deck.sdPlugin/images/couch_xbox.png" width="56"> **Couch: Xbox mode** | TV only → Xbox mode |
+| <img src="com.megarohas.deck.sdPlugin/images/office.png" width="56"> **Office** | back to the desk: leave Xbox mode, close Big Picture (the apps keep running), monitor only, minimize everything |
+
+Big Picture and Xbox mode never run together: turning one on first turns the other off. Xbox mode is detected with the
+official `IsGamingFullScreenExperienceActive()` API.
+
+### Windows
+
+| Key | What it does |
+|---|---|
+| <img src="com.megarohas.deck.sdPlugin/images/desktop.png" width="56"> **Desktop** | minimize all windows for real (like Win+M — unlike Win+D they do not pop back on a stray click) |
+| <img src="com.megarohas.deck.sdPlugin/images/awake_on.png" width="56"> **Stay awake** | the screen does not turn off and the PC does not sleep while it is lit |
+
+*Stay awake* starts/closes the tiny [NeSpat](https://github.com/megarohas/megarohas_windows_tweaks/tree/main/stayawake)
+window app if it is installed in `%LOCALAPPDATA%\Programs\NeSpat`, otherwise the plugin holds the wake lock itself.
+
+## Install
+
+1. Download `megarohas_deck-vX.Y.Z.zip` from [Releases](https://github.com/megarohas/megarohas_deck/releases/latest) and unpack it.
+2. Right-click `install.ps1` → **Run with PowerShell**. It copies the plugin to `%APPDATA%\HotSpot\StreamDock\plugins`
+   and restarts the deck software.
+3. Find the **megarohas** category in the actions list and drag keys onto the deck.
+
+Manual install: copy the `com.megarohas.deck.sdPlugin` folder to `%APPDATA%\HotSpot\StreamDock\plugins` and restart
+fifine Control Deck / StreamDock.
+
+Tested on a fifine AmpliGame D6 with fifine Control Deck 3.10 on Windows 11. Other decks that use the Mirabox StreamDock
+software (293V3, N3, N4, Ajazz AKP153…) should work too — the keys use the standard StreamDock SDK.
+
+## Good to know (D6)
+
+- **The RGB ring is hardware-only.** Neither the software's `lampControl` command (including the store's *RGB Control*
+  plugin) nor the Mirabox HID LED commands change it on the D6. Use the button on the back: short press — next of the
+  9 modes, long press — off/on.
+- **Xbox button opens both Game Bar and the Big Picture menu?** Turn off *Settings → Gaming → Game Bar → Allow your
+  controller to open Game Bar* (in Settings — writing `UseNexusForGameBarEnabled` to the registry is ignored).
+- **Boot logo:** *Settings → Device → Replace boot logo* takes an 800×480 image shown through the 5×3 key windows
+  (160 px per key). `bootlogo/make_bootlogo.py` draws grid-aware logos and a preview through the keys.
+
+## Build from source
+
+Nothing to install: the C# compiler of .NET Framework 4 ships with Windows.
+
+```powershell
+.\build.ps1      # src\*.cs -> com.megarohas.deck.sdPlugin\MegarohasDeck.exe
+.\install.ps1    # copy into the deck software and restart it
+```
+
+Key images are SVG drawn by `make_icons.py` (Python standard library only) and rendered to PNG with headless Edge;
+`docs/make_cover.py` draws the cover. Debugging: an empty `debug` file next to the installed exe makes the plugin log
+every incoming message to `MegarohasDeck.log`.
+
+| Path | |
+|---|---|
+| `src/Program.cs` | StreamDock WebSocket protocol, dispatch to modules |
+| `src/Displays.cs` | screen modes (`SetDisplayConfig` / `QueryDisplayConfig`) |
+| `src/Audio.cs` | volume via Core Audio, live level bar |
+| `src/Record.cs` | OBS via obs-websocket v5 |
+| `src/Gaming.cs` | Big Picture, Xbox mode, Couch, Office |
+| `src/Tools.cs` | Desktop, Stay awake |
+
+## License
+
+[MIT](LICENSE) © megarohas. Not affiliated with fifine, Mirabox, Valve or Microsoft.
+
+---
+
+<a id="русский"></a>
+
+<p align="center"><a href="#megarohas-deck">English</a> · <b>Русский</b></p>
+
+# megarohas deck (по-русски)
+
+Плагин для стрим-деки **fifine AmpliGame D6** (и других дек на софте **Mirabox StreamDock**), который превращает её
+в пульт игрового ПК — и для дивана, и для стола. Каждая кнопка **показывает настоящее состояние**: горит текущий
+режим экранов, у громкости полоска уровня, кнопка записи краснеет и тикает временем, Big Picture и режим Xbox светятся,
+пока открыты — даже если ты переключил что-то с клавиатуры, а не с деки.
+
+Один маленький `.exe`, ничего ставить не надо (используется .NET Framework, который уже есть в Windows), никаких служб.
+
+## Кнопки
+
+Все кнопки — в категории **megarohas** списка действий софта деки, перетаскиваются на любую клавишу.
+
+### Экраны — как Win+P, но одним нажатием
 
 | Кнопка | Что делает |
 |---|---|
-| ![](com.megarohas.deck.sdPlugin/images/mute_on.png) **Без звука** | выключает / включает звук; горит красным, пока звук выключен |
-| ![](com.megarohas.deck.sdPlugin/images/volume_down.png) **Тише** | −2% (удержание — непрерывно) |
-| ![](com.megarohas.deck.sdPlugin/images/volume_up.png) **Громче** | +2% (удержание — непрерывно) |
+| <img src="com.megarohas.deck.sdPlugin/images/internal_on.png" width="56"> **Только монитор** | картинка только на мониторе компьютера |
+| <img src="com.megarohas.deck.sdPlugin/images/external_on.png" width="56"> **Только ТВ** | картинка только на втором экране (ТВ) |
+| <img src="com.megarohas.deck.sdPlugin/images/extend_on.png" width="56"> **Расширить** | рабочий стол на оба экрана |
+| <img src="com.megarohas.deck.sdPlugin/images/clone_on.png" width="56"> **Дублировать** | одна картинка на обоих |
 
-Работают с устройством вывода по умолчанию (ТВ, наушники — какое выбрано сейчас). На ± кнопках полоска
-текущего уровня; пока звук выключен, она серая. Изменение громкости заодно включает звук, как у клавиш Windows.
+Кнопка текущего режима горит и следит и за Win+P. Если переключиться не вышло (ТВ выключен) — значок ошибки.
 
-## Подсветка — только кнопкой на деке
-
-RGB-кольцо D6 программно не управляется: ни команда `lampControl` софта (и его плагин RGB Control из магазина),
-ни HID-команды Mirabox (`SETLB`/`LBLIG`) на него не действуют. Режимы переключает кнопка на задней стороне деки:
-короткое нажатие — следующий режим (статичные цвета и анимации, всего 9), долгое — выключить/включить.
-
-## Запись экрана
-
-![](com.megarohas.deck.sdPlugin/images/record_off.png) **Запись экрана** — запись через OBS, не открывая его окно.
-Если OBS не запущен, кнопка запускает его свёрнутым в трей. Плагин держит в OBS сцену `deck_record` с захватом
-основного экрана (того, что сейчас на месте 0,0 — монитор или ТВ) и переключает на неё только на время записи,
-потом возвращает прежнюю сцену. Пока идёт запись, клавиша красная, на ней тикает время. Файлы — куда пишет OBS
-(`S:\obs_records`), звук — как настроен в OBS. Нужен включённый obs-websocket (Инструменты → Настройки сервера
-WebSocket); пароль плагин берёт из его `config.json`. Запись, начатая в самом OBS, тоже подсвечивается.
-
-## Игровые режимы
+### Громкость
 
 | Кнопка | Что делает |
 |---|---|
-| ![](com.megarohas.deck.sdPlugin/images/bigpicture_on.png) **Steam Big Picture** | открывает / закрывает Big Picture (`steam://open/bigpicture`); горит, пока он открыт |
-| ![](com.megarohas.deck.sdPlugin/images/xbox_mode_on.png) **Режим Xbox** | включает / выключает режим Xbox в Windows 11 (бывший Xbox Full Screen Experience) — это Win+F11; горит, пока режим включён |
-| ![](com.megarohas.deck.sdPlugin/images/couch_bigpicture.png) **Диван: Big Picture** | картинка только на ТВ, через 3 с — Big Picture (если ТВ уже был единственным экраном — сразу) |
-| ![](com.megarohas.deck.sdPlugin/images/couch_xbox.png) **Диван: режим Xbox** | картинка только на ТВ, затем режим Xbox, если он ещё не включён. Если ТВ не включился — значок ошибки и дальше не идёт |
-| ![](com.megarohas.deck.sdPlugin/images/office.png) **Офис** | обратно за стол: выйти из режима Xbox, закрыть Big Picture (сами Steam и Xbox остаются запущенными), картинка только на монитор, свернуть все окна |
+| <img src="com.megarohas.deck.sdPlugin/images/mute_on.png" width="56"> **Без звука** | выключить / включить звук; красная, пока звук выключен |
+| <img src="com.megarohas.deck.sdPlugin/images/volume_down.png" width="56"> **Тише** | −2 %, удержание — непрерывно; полоска показывает уровень |
+| <img src="com.megarohas.deck.sdPlugin/images/volume_up.png" width="56"> **Громче** | +2 %, удержание — непрерывно |
 
-Big Picture и режим Xbox никогда не работают одновременно: включение одного (кнопкой режима или «Диваном») сначала
-выключает другой, «Офис» выключает оба.
+Работают с устройством вывода по умолчанию (ТВ, наушники…).
 
-Включён ли режим Xbox, плагин узнаёт официальной функцией `IsGamingFullScreenExperienceActive()` из `gamemode.dll`.
-Чтобы кнопку Xbox на геймпаде в Big Picture ловил только Steam, в Windows выключено «Настройки → Игры → Game Bar →
-разрешить контроллеру открывать Game Bar» — только руками: запись `UseNexusForGameBarEnabled` в реестр Game Bar не замечает.
+### Запись
 
-## Мелочи Windows
+<img src="com.megarohas.deck.sdPlugin/images/record_off.png" width="56"> **Запись экрана** — одно нажатие, и основной экран
+пишется через **OBS, не открывая его окно**: если OBS не запущен, он стартует свёрнутым в трей, на время записи
+переключается на сцену `deck_record`, потом возвращается на прежнюю. Кнопка красная, на ней тикает время.
+Нужен OBS 28+ с включённым встроенным WebSocket-сервером (*Инструменты → Настройки сервера WebSocket*); пароль плагин
+берёт из конфига самого OBS, вводить ничего не надо.
+
+### Игровые режимы
 
 | Кнопка | Что делает |
 |---|---|
-| ![](com.megarohas.deck.sdPlugin/images/desktop.png) **Рабочий стол** | сворачивает все окна по-настоящему (`Shell.Application.MinimizeAll`, как Win+M): в отличие от Win+D окна не разворачиваются обратно случайным кликом |
-| ![](com.megarohas.deck.sdPlugin/images/awake_on.png) **Не спать** | запускает свёрнутой / закрывает свою утилиту «Не спать» (`NeSpat.exe` из `%LOCALAPPDATA%\Programs\NeSpat`): пока она открыта, экран не гаснет и ПК не засыпает; горит, пока работает |
+| <img src="com.megarohas.deck.sdPlugin/images/bigpicture_on.png" width="56"> **Steam Big Picture** | открыть / закрыть Big Picture; горит, пока открыт |
+| <img src="com.megarohas.deck.sdPlugin/images/xbox_mode_on.png" width="56"> **Режим Xbox** | включить / выключить режим Xbox в Windows 11 (бывший Xbox Full Screen Experience); горит, пока включён |
+| <img src="com.megarohas.deck.sdPlugin/images/couch_bigpicture.png" width="56"> **Диван: Big Picture** | только ТВ → Big Picture |
+| <img src="com.megarohas.deck.sdPlugin/images/couch_xbox.png" width="56"> **Диван: режим Xbox** | только ТВ → режим Xbox |
+| <img src="com.megarohas.deck.sdPlugin/images/office.png" width="56"> **Офис** | обратно за стол: выйти из режима Xbox, закрыть Big Picture (сами приложения остаются запущенными), только монитор, свернуть всё |
 
-## Загрузочная картинка
+Big Picture и режим Xbox никогда не работают вместе: включение одного сначала выключает другой. Режим Xbox
+определяется официальной функцией `IsGamingFullScreenExperienceActive()`.
 
-`bootlogo/make_bootlogo.py` рисует варианты 800×480 под сетку клавиш и превью «сквозь клавиши». Стоит
-`bootlogo/rink.png` (хоккейная площадка); ставится в софте: Настройки → Оборудование → «Заменить логотип запуска».
+### Windows
 
-## Файлы
+| Кнопка | Что делает |
+|---|---|
+| <img src="com.megarohas.deck.sdPlugin/images/desktop.png" width="56"> **Рабочий стол** | сворачивает все окна по-настоящему (как Win+M — в отличие от Win+D окна не разворачиваются обратно от случайного клика) |
+| <img src="com.megarohas.deck.sdPlugin/images/awake_on.png" width="56"> **Не спать** | пока горит, экран не гаснет и ПК не засыпает |
 
-- `com.megarohas.deck.sdPlugin/` — сам плагин: `manifest.json`, `ru.json`, картинки; сюда же собирается `MegarohasDeck.exe`.
-- `src/` — исходники exe: `Program.cs` (WebSocket-протокол StreamDock), `Displays.cs` (режимы экранов), `Audio.cs` (громкость),
-  `Record.cs` (запись через obs-websocket), `Gaming.cs` (Big Picture, режим Xbox, «Диван», «Офис»),
-  `Tools.cs` («Рабочий стол», «Не спать»).
-- `build.ps1` — сборка exe (csc из .NET Framework 4, ничего ставить не надо).
-- `make_icons.py` — рисует картинки кнопок (SVG → PNG через Edge в headless-режиме, только стандартная библиотека Python).
-- `install.ps1` — копирует плагин в `%APPDATA%\HotSpot\StreamDock\plugins` и перезапускает софт деки.
+«Не спать» запускает/закрывает крошечное окно [NeSpat](https://github.com/megarohas/megarohas_windows_tweaks/tree/main/stayawake),
+если оно установлено в `%LOCALAPPDATA%\Programs\NeSpat`; иначе плагин сам держит запрет сна.
 
-Отладка: пустой файл `debug` рядом с установленным exe — после перезапуска софта плагин пишет все входящие
-сообщения и уровень громкости в `MegarohasDeck.log`; ошибки пишутся туда всегда.
+## Установка
+
+1. Скачай `megarohas_deck-vX.Y.Z.zip` со страницы [Releases](https://github.com/megarohas/megarohas_deck/releases/latest) и распакуй.
+2. Правый клик по `install.ps1` → **Выполнить с помощью PowerShell**. Скрипт скопирует плагин в
+   `%APPDATA%\HotSpot\StreamDock\plugins` и перезапустит софт деки.
+3. В списке действий найди категорию **megarohas** и перетащи кнопки на деку.
+
+Вручную: скопируй папку `com.megarohas.deck.sdPlugin` в `%APPDATA%\HotSpot\StreamDock\plugins` и перезапусти
+fifine Control Deck / StreamDock.
+
+Проверено на fifine AmpliGame D6 с fifine Control Deck 3.10 под Windows 11. Другие деки на софте Mirabox StreamDock
+(293V3, N3, N4, Ajazz AKP153…) тоже должны работать — кнопки сделаны на стандартном StreamDock SDK.
+
+## Полезно знать (D6)
+
+- **RGB-кольцо управляется только кнопкой.** На D6 его не меняет ни команда `lampControl` софта (в том числе плагин
+  *RGB Control* из магазина), ни HID-команды подсветки Mirabox. Кнопка на задней стороне: короткое нажатие — следующий
+  из 9 режимов, долгое — выключить/включить.
+- **Кнопка Xbox открывает и Game Bar, и меню Big Picture?** Выключи *Настройки → Игры → Game Bar → Разрешить контроллеру
+  открывать Game Bar* (именно в настройках — запись `UseNexusForGameBarEnabled` в реестр не действует).
+- **Загрузочная картинка:** *Настройки → Оборудование → Заменить логотип запуска* — 800×480, видна сквозь окна
+  клавиш 5×3 (по 160 px на клавишу). `bootlogo/make_bootlogo.py` рисует логотипы под сетку и превью «сквозь клавиши».
+
+## Сборка из исходников
+
+Ставить ничего не надо: компилятор C# из .NET Framework 4 есть в Windows.
+
+```powershell
+.\build.ps1      # src\*.cs -> com.megarohas.deck.sdPlugin\MegarohasDeck.exe
+.\install.ps1    # скопировать в софт деки и перезапустить его
+```
+
+Картинки кнопок — SVG из `make_icons.py` (только стандартная библиотека Python), в PNG через Edge в headless-режиме;
+обложку рисует `docs/make_cover.py`. Отладка: пустой файл `debug` рядом с установленным exe — плагин пишет все входящие
+сообщения в `MegarohasDeck.log`.
+
+## Лицензия
+
+[MIT](LICENSE) © megarohas. Проект не связан с fifine, Mirabox, Valve или Microsoft.
