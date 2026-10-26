@@ -223,6 +223,79 @@
       "UserTitleEnabled": true,
       "Tooltip": "Toggle Xbox mode of Windows 11 (Win+F11)",
       "UUID": "com.megarohas.deck.gaming.xbox_mode"
+    },
+    {
+      "Icon": "images/list_couch",
+      "Name": "Couch: Big Picture",
+      "States": [
+        {
+          "Image": "images/couch_bigpicture",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Switch the picture to the TV only, then open Steam Big Picture",
+      "UUID": "com.megarohas.deck.gaming.couch_bigpicture"
+    },
+    {
+      "Icon": "images/list_couch",
+      "Name": "Couch: Xbox mode",
+      "States": [
+        {
+          "Image": "images/couch_xbox",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Switch the picture to the TV only, then turn on Xbox mode (Win+F11)",
+      "UUID": "com.megarohas.deck.gaming.couch_xbox"
+    },
+    {
+      "Icon": "images/list_desktop",
+      "Name": "Desktop",
+      "States": [
+        {
+          "Image": "images/desktop",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Minimize all windows for real (like Win+M, not the Win+D toggle)",
+      "UUID": "com.megarohas.deck.tools.desktop"
+    },
+    {
+      "Icon": "images/list_awake",
+      "Name": "Stay awake",
+      "States": [
+        {
+          "Image": "images/awake_off",
+          "Name": "Off"
+        },
+        {
+          "Image": "images/awake_on",
+          "Name": "On"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Start / close NeSpat: while it runs the screen does not turn off and the PC does not sleep; lights up while active",
+      "UUID": "com.megarohas.deck.tools.awake",
+      "DisableAutomaticStates": true
     }
   ],
   "SDKVersion": 1,
@@ -232,7 +305,7 @@
   "Category": "megarohas",
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
-  "Description": "Personal deck actions by megarohas: projection mode, volume, recording, VPN and gaming mode keys with live state",
+  "Description": "Personal deck actions by megarohas: displays, volume, recording, VPN, gaming modes and desktop tools with live state",
   "Version": "1.0.0",
   "URL": "https://github.com/megarohas",
   "OS": [

@@ -118,6 +118,42 @@ def xbox_mode(g, w):
             f'<g transform="translate(128,128) scale(.78) translate(-128,-142)">{gamepad(g, "none", w * 1.25)}</g>')
 
 
+DESKTOP = ("#c4b5fd", "#8b5cf6")
+COFFEE = ("#fcd34d", "#f59e0b")
+
+
+def coffee(g, s, w, steam):
+    cup = (f'<path d="M58 112H170V148C170 178 146 200 114 200C82 200 58 178 58 148Z" fill="{s}" stroke="{g}" '
+           f'stroke-width="{w}" stroke-linejoin="round"/>'
+           f'<path d="M170 126H182C196 126 204 136 204 148C204 160 196 170 182 170H166" fill="none" stroke="{g}" '
+           f'stroke-width="{w}" stroke-linecap="round"/>')
+    if steam:
+        cup += (f'<path d="M90 50C80 62 100 72 90 88M124 44C114 56 134 66 124 82M158 50C148 62 168 72 158 88" '
+                f'fill="none" stroke="{g}" stroke-width="{w * 0.8:g}" stroke-linecap="round"/>')
+    return cup
+
+
+def sofa(g, w):
+    return (f'<path d="M66 150V122C66 110 74 102 86 102H170C182 102 190 110 190 122V150" fill="none" stroke="{g}" '
+            f'stroke-width="{w}" stroke-linejoin="round"/>'
+            f'<path d="M48 150C48 140 55 134 63 134C71 134 78 140 78 150V162H178V150C178 140 185 134 193 134C201 134 208 140 '
+            f'208 150V192H48Z" fill="none" stroke="{g}" stroke-width="{w}" stroke-linejoin="round"/>'
+            f'<path d="M62 192V208M194 192V208" stroke="{g}" stroke-width="{w}" stroke-linecap="round"/>')
+
+
+def couch(g, w, badge):
+    """Sofa with the target mode drawn small above it."""
+    return (f'<g transform="translate(128,64) scale(.42) translate(-128,-128)">{badge}</g>'
+            f'<g transform="translate(0,20)">{sofa(g, w)}</g>')
+
+
+def desktop(g, w):
+    return (f'<rect x="36" y="44" width="184" height="128" rx="14" fill="none" stroke="{g}" stroke-width="{w}"/>'
+            f'<path d="M108 212H148M128 172V212" stroke="{g}" stroke-width="{w}" stroke-linecap="round"/>'
+            f'<path d="M128 78V134M104 112L128 136L152 112" fill="none" stroke="{g}" stroke-width="{w}" '
+            f'stroke-linecap="round" stroke-linejoin="round"/>')
+
+
 def mode_keys():
     """name -> svg body for the VPN / Big Picture / Xbox mode keys."""
     black = '<rect width="256" height="256" fill="#000"/>'
@@ -128,6 +164,11 @@ def mode_keys():
         "bigpicture_off": black + dark + f'<g opacity="0.75">{bigpicture(STEAM[0], "none", 13)}</g>',
         "bigpicture_on": black + tile(STEAM) + bigpicture(DARK_GLYPH, LIT_SCREEN, 13),
         "xbox_mode": black + dark + f'<g opacity="0.85">{xbox_mode(XBOX[0], 13)}</g>',
+        "couch_bigpicture": black + dark + f'<g opacity="0.9">{couch(STEAM[0], 13, bigpicture(STEAM[0], "none", 22))}</g>',
+        "couch_xbox": black + dark + f'<g opacity="0.9">{couch(XBOX[0], 13, xbox_mode(XBOX[0], 22))}</g>',
+        "desktop": black + dark + f'<g opacity="0.9">{desktop(DESKTOP[0], 13)}</g>',
+        "awake_off": black + dark + f'<g opacity="0.75" transform="translate(0,-28)">{coffee(COFFEE[0], "none", 13, False)}</g>',
+        "awake_on": black + tile(COFFEE) + f'<g transform="translate(0,6)">{coffee(DARK_GLYPH, LIT_SCREEN, 13, True)}</g>',
     }
 
 
@@ -187,7 +228,8 @@ def main():
     for name, body in mode_keys().items():
         render(body, 256, OUT / f"{name}.png")
     for name, body in (("vpn", vpn("#fff", "none", 18, True)), ("bigpicture", bigpicture("#fff", "none", 18)),
-                       ("xbox_mode", xbox_mode("#fff", 18))):
+                       ("xbox_mode", xbox_mode("#fff", 18)), ("couch", sofa("#fff", 18)),
+                       ("desktop", desktop("#fff", 18)), ("awake", coffee("#fff", "none", 18, True))):
         for size, suffix in ((20, ""), (40, "@2x")):
             render(body, size, OUT / f"list_{name}{suffix}.png")
     render(f'<rect width="256" height="256" fill="#000"/><rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'

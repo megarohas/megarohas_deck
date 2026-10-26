@@ -58,6 +58,18 @@ static class Displays
         }
     }
 
+    public const uint External = 0x8;
+
+    // Перейти на режим, если он ещё не включён. -1 — не вышло (ТВ отключён и т. п.), 0 — уже был, 1 — переключили.
+    public static int SwitchTo(uint topology)
+    {
+        if (CurrentTopology() == topology) return 0;
+        int error = SetDisplayConfig(0, IntPtr.Zero, 0, IntPtr.Zero, SDC_APPLY | topology);
+        if (error != 0) Program.Log("SetDisplayConfig(" + topology + ") = " + error);
+        Refresh(true);
+        return error == 0 ? 1 : -1;
+    }
+
     public static void Refresh(bool force)
     {
         uint current = CurrentTopology();

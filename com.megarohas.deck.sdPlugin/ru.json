@@ -1,6 +1,6 @@
 {
   "Name": "megarohas",
-  "Description": "Личные кнопки megarohas: экраны (Win+P), громкость, запись, VPN и игровые режимы, с живым состоянием",
+  "Description": "Личные кнопки megarohas: экраны, громкость, запись, VPN, игровые режимы и мелочи Windows, с живым состоянием",
   "Category": "megarohas",
   "com.megarohas.deck.display.internal": {
     "Name": "Только монитор",
@@ -45,5 +45,21 @@
   "com.megarohas.deck.gaming.xbox_mode": {
     "Name": "Режим Xbox",
     "Tooltip": "Включить / выключить режим Xbox в Windows 11 (Win+F11)"
+  },
+  "com.megarohas.deck.gaming.couch_bigpicture": {
+    "Name": "Диван: Big Picture",
+    "Tooltip": "Картинка только на ТВ, затем Steam Big Picture"
+  },
+  "com.megarohas.deck.gaming.couch_xbox": {
+    "Name": "Диван: режим Xbox",
+    "Tooltip": "Картинка только на ТВ, затем режим Xbox (Win+F11)"
+  },
+  "com.megarohas.deck.tools.desktop": {
+    "Name": "Рабочий стол",
+    "Tooltip": "Свернуть все окна по-настоящему (как Win+M, а не переключатель Win+D)"
+  },
+  "com.megarohas.deck.tools.awake": {
+    "Name": "Не спать",
+    "Tooltip": "Запуск / закрытие «Не спать»: пока она работает, экран не гаснет и ПК не засыпает; горит, пока активна"
   }
 }

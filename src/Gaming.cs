@@ -1,5 +1,6 @@
 // Игровые режимы: Steam Big Picture (горит, пока открыт; нажатие открывает или закрывает его)
 // и режим Xbox в Windows 11 (бывший Xbox Full Screen Experience; переключается сочетанием Win+F11).
+// «Диван»: сначала картинка только на ТВ, потом Big Picture или режим Xbox.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,6 +40,23 @@ static class Gaming
         {
             SendKeys(VK_LWIN, VK_F11);
         }
+        else if ((name == "couch_bigpicture" || name == "couch_xbox") && ev == "keyDown")
+        {
+            bool xbox = name == "couch_xbox";
+            ThreadPool.QueueUserWorkItem(_ => Couch(context, xbox));
+        }
+    }
+
+    // ТВ включается не мгновенно: после переключения ждём, пока картинка устаканится, и только потом режим.
+    static void Couch(string context, bool xbox)
+    {
+        int switched = Displays.SwitchTo(Displays.External);
+        if (switched < 0) { Program.ShowAlert(context); return; }
+        if (switched > 0) Thread.Sleep(3000);
+        if (xbox) SendKeys(VK_LWIN, VK_F11);
+        else if (!BigPictureOpen()) Open("steam://open/bigpicture");
+        Thread.Sleep(1500);
+        Refresh(true);
     }
 
     public static void Refresh(bool force)

@@ -57,6 +57,15 @@ Windows указывает на ядро Hiddify (`127.0.0.1:12334`) и оно �
 |---|---|
 | ![](com.megarohas.deck.sdPlugin/images/bigpicture_on.png) **Steam Big Picture** | открывает / закрывает Big Picture (`steam://open/bigpicture`); горит, пока он открыт |
 | ![](com.megarohas.deck.sdPlugin/images/xbox_mode.png) **Режим Xbox** | включает / выключает режим Xbox в Windows 11 (бывший Xbox Full Screen Experience) — это Win+F11 |
+| ![](com.megarohas.deck.sdPlugin/images/couch_bigpicture.png) **Диван: Big Picture** | картинка только на ТВ, через 3 с — Big Picture (если ТВ уже был единственным экраном — сразу) |
+| ![](com.megarohas.deck.sdPlugin/images/couch_xbox.png) **Диван: режим Xbox** | картинка только на ТВ, затем Win+F11; если ТВ не включился — значок ошибки и дальше не идёт |
+
+## Мелочи Windows
+
+| Кнопка | Что делает |
+|---|---|
+| ![](com.megarohas.deck.sdPlugin/images/desktop.png) **Рабочий стол** | сворачивает все окна по-настоящему (`Shell.Application.MinimizeAll`, как Win+M): в отличие от Win+D окна не разворачиваются обратно случайным кликом |
+| ![](com.megarohas.deck.sdPlugin/images/awake_on.png) **Не спать** | запускает свёрнутой / закрывает свою утилиту «Не спать» (`NeSpat.exe` из `%LOCALAPPDATA%\Programs\NeSpat`): пока она открыта, экран не гаснет и ПК не засыпает; горит, пока работает |
 
 ## Загрузочная картинка
 
@@ -67,7 +76,8 @@ Windows указывает на ядро Hiddify (`127.0.0.1:12334`) и оно �
 
 - `com.megarohas.deck.sdPlugin/` — сам плагин: `manifest.json`, `ru.json`, картинки; сюда же собирается `MegarohasDeck.exe`.
 - `src/` — исходники exe: `Program.cs` (WebSocket-протокол StreamDock), `Displays.cs` (режимы экранов), `Audio.cs` (громкость),
-  `Record.cs` (запись через obs-websocket), `Vpn.cs` (Hiddify), `Gaming.cs` (Big Picture, режим Xbox).
+  `Record.cs` (запись через obs-websocket), `Vpn.cs` (Hiddify), `Gaming.cs` (Big Picture, режим Xbox, «Диван»),
+  `Tools.cs` («Рабочий стол», «Не спать»).
 - `build.ps1` — сборка exe (csc из .NET Framework 4, ничего ставить не надо).
 - `make_icons.py` — рисует картинки кнопок (SVG → PNG через Edge в headless-режиме, только стандартная библиотека Python).
 - `install.ps1` — копирует плагин в `%APPDATA%\HotSpot\StreamDock\plugins` и перезапускает софт деки.
