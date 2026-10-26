@@ -1,3 +1,4 @@
 com.megarohas.deck.sdPlugin/*.exe
 *.log
 __pycache__/
+dist/
