@@ -15,7 +15,7 @@ static class Displays
 
     static readonly Dictionary<string, uint> Topologies = new Dictionary<string, uint>
     {
-        { "internal", 0x1 },  // DISPLAYCONFIG_TOPOLOGY_INTERNAL — монитор DEXP
+        { "internal", 0x1 },  // DISPLAYCONFIG_TOPOLOGY_INTERNAL — «только экран компьютера» (основной монитор)
         { "clone", 0x2 },
         { "extend", 0x4 },
         { "external", 0x8 },  // DISPLAYCONFIG_TOPOLOGY_EXTERNAL — ТВ

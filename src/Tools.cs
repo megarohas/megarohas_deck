@@ -1,24 +1,28 @@
 // Мелочи для Windows: «Рабочий стол» — свернуть все окна по-настоящему (как Win+M, а не переключатель Win+D,
-// который разворачивает всё обратно) и «Не спать» — запуск/закрытие своей утилиты NeSpat.exe: пока она открыта,
-// экран не гаснет и ПК не засыпает. Кнопка горит, пока NeSpat запущена.
+// который разворачивает всё обратно) и «Не спать» — пока включено, экран не гаснет и ПК не засыпает.
+// «Не спать» запускает/закрывает утилиту NeSpat.exe (megarohas_windows_tweaks/stayawake), если она установлена
+// в %LOCALAPPDATA%\Programs\NeSpat; иначе плагин сам держит запрет сна. Кнопка горит, пока запрет действует.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 static class Tools
 {
     public const string Group = "tools.";
     const string AwakeProcess = "NeSpat";
-    static readonly string[] AwakeExe =
-    {
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NeSpat", "NeSpat.exe"),
-        @"S:\Claude\StayAwake\NeSpat.exe",
-    };
+    static readonly string AwakeExe = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "NeSpat", "NeSpat.exe");
+
+    const uint ES_CONTINUOUS = 0x80000000, ES_SYSTEM_REQUIRED = 0x1, ES_DISPLAY_REQUIRED = 0x2;
+    [DllImport("kernel32.dll")] static extern uint SetThreadExecutionState(uint flags);
 
     static readonly HashSet<string> awakeKeys = new HashSet<string>();
     static int shown = -1;
+    // Встроенный запрет сна: SetThreadExecutionState действует, пока жив поток, который его выставил.
+    static ManualResetEvent builtInStop;
 
     public static void Handle(string ev, string name, string context)
     {
@@ -63,25 +67,32 @@ static class Tools
     {
         var running = Process.GetProcessesByName(AwakeProcess);
         foreach (var p in running) p.Dispose();
-        return running.Length > 0;
+        return running.Length > 0 || builtInStop != null;
     }
 
-    // Запускаем свёрнутой, чтобы окно не выскакивало поверх игры.
+    // NeSpat запускаем свёрнутой, чтобы окно не выскакивало поверх игры.
     static void StartAwake(string context)
     {
-        foreach (var exe in AwakeExe)
+        if (File.Exists(AwakeExe))
         {
-            if (!File.Exists(exe)) continue;
-            Process.Start(new ProcessStartInfo(exe)
+            Process.Start(new ProcessStartInfo(AwakeExe)
             {
                 UseShellExecute = true,
-                WorkingDirectory = Path.GetDirectoryName(exe),
+                WorkingDirectory = Path.GetDirectoryName(AwakeExe),
                 WindowStyle = ProcessWindowStyle.Minimized,
             });
             return;
         }
-        Program.Log("Tools: NeSpat.exe not found");
-        Program.ShowAlert(context);
+        var stop = new ManualResetEvent(false);
+        builtInStop = stop;
+        var thread = new Thread(() =>
+        {
+            SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+            stop.WaitOne();
+            SetThreadExecutionState(ES_CONTINUOUS);
+        });
+        thread.IsBackground = true;
+        thread.Start();
     }
 
     // Закрываем окно штатно — NeSpat сама снимает запрет сна; если не закрылась, Windows снимет его вместе с процессом.
@@ -92,6 +103,9 @@ static class Tools
             {
                 if (!p.CloseMainWindow() || !p.WaitForExit(2000)) p.Kill();
             }
+        var stop = builtInStop;
+        builtInStop = null;
+        if (stop != null) stop.Set();
     }
 
     // Shell.Application.MinimizeAll — то же, что Win+M. Через COM, а не нажатием клавиш: Win+M перехватывает DisplayHotkeys.

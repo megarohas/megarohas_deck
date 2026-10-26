@@ -307,7 +307,7 @@
   "CodePath": "MegarohasDeck.exe",
   "Description": "Personal deck actions by megarohas: displays, volume, recording, gaming modes and desktop tools with live state",
   "Version": "1.0.0",
-  "URL": "https://github.com/megarohas",
+  "URL": "https://github.com/megarohas/megarohas_deck",
   "OS": [
     {
       "Platform": "windows",
