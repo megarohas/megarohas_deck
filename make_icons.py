@@ -84,6 +84,14 @@ def tile(colors):
             f'<rect width="256" height="256" rx="44" fill="url(#t)"/>')
 
 
+def led_ring(color, dot, radius=84):
+    """Ring of 18 dots like the D6 light ring; Lights.cs draws the live version of the same picture."""
+    import math
+    return "".join(f'<circle cx="{128 + radius * math.cos(2 * math.pi * i / 18 - math.pi / 2):.1f}" '
+                   f'cy="{128 + radius * math.sin(2 * math.pi * i / 18 - math.pi / 2):.1f}" r="{dot}" fill="{color}"/>'
+                   for i in range(18))
+
+
 def audio_keys():
     """name -> svg body for the audio key images."""
     black = '<rect width="256" height="256" fill="#000"/>'
@@ -137,6 +145,12 @@ def main():
     for name, extra in (("mute", WAVES), ("volume_down", MINUS), ("volume_up", PLUS)):
         for size, suffix in ((20, ""), (40, "@2x")):
             render(speaker("#fff", "none", 18, extra), size, OUT / f"list_{name}{suffix}.png")
+    glow = ('<defs><radialGradient id="glow"><stop offset="0" stop-color="#00aaff" stop-opacity=".43"/>'
+            '<stop offset="1" stop-color="#00aaff" stop-opacity="0"/></radialGradient></defs>')
+    render(f'<rect width="256" height="256" fill="#000"/><rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'
+           f'{glow}<circle cx="128" cy="128" r="80" fill="url(#glow)"/>{led_ring("#00aaff", 10)}', 256, OUT / "lights.png")
+    for size, suffix in ((20, ""), (40, "@2x")):
+        render(led_ring("#fff", 16, 96), size, OUT / f"list_lights{suffix}.png")
     for size, suffix in ((28, ""), (56, "@2x")):
         render(extend("#fff", "none", 18), size, OUT / f"category{suffix}.png")
     render(key_svg("extend", True), 144, OUT / "plugin.png")

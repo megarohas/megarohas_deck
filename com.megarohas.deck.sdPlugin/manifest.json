@@ -145,6 +145,23 @@
       "UserTitleEnabled": true,
       "Tooltip": "Raise the volume (hold to keep going); the bar shows the level",
       "UUID": "com.megarohas.deck.audio.volume_up"
+    },
+    {
+      "Icon": "images/list_lights",
+      "Name": "Light ring",
+      "States": [
+        {
+          "Image": "images/lights",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Static colour for the D6 light ring; each press picks the next colour (the last one turns it off)",
+      "UUID": "com.megarohas.deck.lights.color"
     }
   ],
   "SDKVersion": 1,
@@ -154,7 +171,7 @@
   "Category": "megarohas",
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
-  "Description": "Personal deck actions by megarohas: projection mode and volume keys with live state",
+  "Description": "Personal deck actions by megarohas: projection mode, volume and light ring keys with live state",
   "Version": "1.0.0",
   "URL": "https://github.com/megarohas",
   "OS": [

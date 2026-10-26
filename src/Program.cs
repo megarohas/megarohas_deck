@@ -1,6 +1,6 @@
 // MegarohasDeck — личный плагин megarohas для fifine Control Deck
 // (движок Mirabox StreamDock, протокол как у Elgato Stream Deck).
-// Здесь — WebSocket-связь с софтом деки и раздача событий по модулям (Displays, Audio).
+// Здесь — WebSocket-связь с софтом деки и раздача событий по модулям (Displays, Audio, Lights).
 // Сборка: build.ps1 (csc из .NET Framework 4, C# 5).
 using System;
 using System.Collections.Generic;
@@ -58,10 +58,15 @@ static class Program
     static void Dispatch(Dictionary<string, object> msg)
     {
         string ev = Field(msg, "event"), action = Field(msg, "action"), context = Field(msg, "context");
+        string device = Field(msg, "device");
+        if (ev == "deviceDidConnect" && device != null) Lights.DeviceConnected(device);
+        else if (ev == "deviceDidDisconnect" && device != null) Lights.DeviceDisconnected(device);
+        else if (ev == "systemDidWakeUp") ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(3000); Lights.Apply(); });
         if (ev == null || action == null || context == null || !action.StartsWith(Prefix)) return;
         string name = action.Substring(Prefix.Length);
         if (name.StartsWith(Displays.Group)) Displays.Handle(ev, name.Substring(Displays.Group.Length), context);
         else if (name.StartsWith(Audio.Group)) Audio.Handle(ev, name.Substring(Audio.Group.Length), context);
+        else if (name.StartsWith(Lights.Group)) Lights.Handle(ev, name.Substring(Lights.Group.Length), context);
     }
 
     // Раз в секунду: подсветка следует за изменениями, сделанными не с деки.
@@ -90,7 +95,7 @@ static class Program
         Send(new { @event = "showAlert", context = context });
     }
 
-    static void Send(object message)
+    public static void Send(object message)
     {
         var bytes = Encoding.UTF8.GetBytes(json.Serialize(message));
         lock (sendLock)
