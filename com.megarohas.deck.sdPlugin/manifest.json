@@ -162,6 +162,23 @@
       "UserTitleEnabled": true,
       "Tooltip": "Static colour for the D6 light ring; each press picks the next colour (the last one turns it off)",
       "UUID": "com.megarohas.deck.lights.color"
+    },
+    {
+      "Icon": "images/list_record",
+      "Name": "Record screen",
+      "States": [
+        {
+          "Image": "images/record_off",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Start / stop recording the main screen with OBS in the background (starts OBS in the tray if needed); red with a timer while recording",
+      "UUID": "com.megarohas.deck.record.toggle"
     }
   ],
   "SDKVersion": 1,
@@ -171,7 +188,7 @@
   "Category": "megarohas",
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
-  "Description": "Personal deck actions by megarohas: projection mode, volume and light ring keys with live state",
+  "Description": "Personal deck actions by megarohas: projection mode, volume, light ring and screen recording keys with live state",
   "Version": "1.0.0",
   "URL": "https://github.com/megarohas",
   "OS": [

@@ -149,7 +149,7 @@ static class Lights
         }
     }
 
-    static GraphicsPath RoundedRect(Rectangle r, int radius)
+    public static GraphicsPath RoundedRect(Rectangle r, int radius)
     {
         var path = new GraphicsPath();
         int d = radius * 2;

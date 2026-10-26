@@ -52,16 +52,15 @@ def palette():
 
 
 def rink():
-    """Top view of a hockey rink laid onto the key grid, 'M' at centre ice."""
+    """Top view of a hockey rink laid onto the key grid."""
     red, blue = "#d0353b", "#1f5fbf"
     b = ['<rect width="800" height="480" fill="#eef4f8"/>']
-    # centre red line, blue lines and centre circle
+    # centre red line, blue lines, centre faceoff circle and spot
     b.append(f'<rect x="395" y="0" width="10" height="480" fill="{red}"/>')
     for x in (240, 560):
         b.append(f'<rect x="{x - 8}" y="0" width="16" height="480" fill="{blue}"/>')
-    b.append(f'<circle cx="400" cy="240" r="56" fill="#eef4f8" stroke="{blue}" stroke-width="5"/>')
-    b.append('<text x="400" y="274" text-anchor="middle" font-family="Bahnschrift" font-weight="700" '
-             f'font-size="96" fill="{blue}">M</text>')
+    b.append(f'<circle cx="400" cy="240" r="56" fill="none" stroke="{blue}" stroke-width="5"/>')
+    b.append(f'<circle cx="400" cy="240" r="9" fill="{blue}"/>')
     # neutral zone dots
     for x in (290, 510):
         for y in (80, 400):

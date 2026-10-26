@@ -151,6 +151,12 @@ def main():
            f'{glow}<circle cx="128" cy="128" r="80" fill="url(#glow)"/>{led_ring("#00aaff", 10)}', 256, OUT / "lights.png")
     for size, suffix in ((20, ""), (40, "@2x")):
         render(led_ring("#fff", 16, 96), size, OUT / f"list_lights{suffix}.png")
+    render(f'<rect width="256" height="256" fill="#000"/><rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'
+           f'<circle cx="128" cy="128" r="70" fill="none" stroke="#ef4444" stroke-width="13" opacity=".85"/>'
+           f'<circle cx="128" cy="128" r="40" fill="#ef4444"/>', 256, OUT / "record_off.png")
+    for size, suffix in ((20, ""), (40, "@2x")):
+        render('<circle cx="128" cy="128" r="96" fill="none" stroke="#fff" stroke-width="22"/>'
+               '<circle cx="128" cy="128" r="54" fill="#fff"/>', size, OUT / f"list_record{suffix}.png")
     for size, suffix in ((28, ""), (56, "@2x")):
         render(extend("#fff", "none", 18), size, OUT / f"category{suffix}.png")
     render(key_svg("extend", True), 144, OUT / "plugin.png")
