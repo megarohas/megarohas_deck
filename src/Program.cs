@@ -1,6 +1,6 @@
 // MegarohasDeck — личный плагин megarohas для fifine Control Deck
 // (движок Mirabox StreamDock, протокол как у Elgato Stream Deck).
-// Здесь — WebSocket-связь с софтом деки и раздача событий по модулям (Displays, ...).
+// Здесь — WebSocket-связь с софтом деки и раздача событий по модулям (Displays, Audio).
 // Сборка: build.ps1 (csc из .NET Framework 4, C# 5).
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ static class Program
     public static readonly string Dir = AppDomain.CurrentDomain.BaseDirectory;
     static readonly string logPath = Path.Combine(Dir, "MegarohasDeck.log");
     // Файл debug рядом с exe — писать в лог все входящие сообщения.
-    static readonly bool debug = File.Exists(Path.Combine(Dir, "debug"));
+    public static readonly bool Debug = File.Exists(Path.Combine(Dir, "debug"));
 
     static void Main(string[] args)
     {
@@ -49,7 +49,7 @@ static class Program
             if (!r.EndOfMessage) continue;
             string text = Encoding.UTF8.GetString(message.ToArray());
             message.SetLength(0);
-            if (debug) Log(text);
+            if (Debug) Log(text);
             try { Dispatch(json.Deserialize<Dictionary<string, object>>(text)); }
             catch (Exception e) { Log(e + "\n" + text); }
         }
@@ -61,18 +61,28 @@ static class Program
         if (ev == null || action == null || context == null || !action.StartsWith(Prefix)) return;
         string name = action.Substring(Prefix.Length);
         if (name.StartsWith(Displays.Group)) Displays.Handle(ev, name.Substring(Displays.Group.Length), context);
+        else if (name.StartsWith(Audio.Group)) Audio.Handle(ev, name.Substring(Audio.Group.Length), context);
     }
 
     // Раз в секунду: подсветка следует за изменениями, сделанными не с деки.
     static void Poll()
     {
-        try { Displays.Refresh(false); }
+        try
+        {
+            Displays.Refresh(false);
+            Audio.Refresh(false);
+        }
         catch (Exception e) { Log(e.ToString()); }
     }
 
     public static void SetState(string context, int state)
     {
         Send(new { @event = "setState", context = context, payload = new { state = state } });
+    }
+
+    public static void SetImage(string context, string dataUri)
+    {
+        Send(new { @event = "setImage", context = context, payload = new { image = dataUri, target = 0 } });
     }
 
     public static void ShowAlert(string context)

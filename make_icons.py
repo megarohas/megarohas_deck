@@ -60,6 +60,44 @@ def clone(g, s, w):
 
 GLYPHS = {"internal": monitor, "external": tv, "extend": extend, "clone": clone}
 
+AUDIO = ("#67e8f9", "#38bdf8")
+MUTED = ("#fda4af", "#ef4444")
+# Volume level bar; Audio.cs draws the fill over this track, keep the numbers in sync.
+BAR = dict(x=58, y=198, width=140, height=16)
+
+
+def speaker(g, s, w, extra):
+    return (f'<path d="M44 104H74L116 70V186L74 152H44Z" fill="{s}" stroke="{g}" stroke-width="{w}" stroke-linejoin="round"/>'
+            f'<path d="{extra}" stroke="{g}" stroke-width="{w}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>')
+
+
+WAVES = "M146 100Q164 128 146 156M170 80Q200 128 170 176"
+CROSS = "M150 104L198 152M198 104L150 152"
+PLUS = "M150 128H206M178 100V156"
+MINUS = "M150 128H206"
+
+
+def tile(colors):
+    a, b = colors
+    return (f'<defs><linearGradient id="t" x1="0" y1="0" x2="1" y2="1">'
+            f'<stop offset="0" stop-color="{a}"/><stop offset="1" stop-color="{b}"/></linearGradient></defs>'
+            f'<rect width="256" height="256" rx="44" fill="url(#t)"/>')
+
+
+def audio_keys():
+    """name -> svg body for the audio key images."""
+    black = '<rect width="256" height="256" fill="#000"/>'
+    dark = f'<rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'
+    track = (f'<rect x="{BAR["x"]}" y="{BAR["y"]}" width="{BAR["width"]}" height="{BAR["height"]}" '
+             f'rx="{BAR["height"] // 2}" fill="#34343c"/>')
+    accent = AUDIO[0]
+    return {
+        "mute_off": black + dark + f'<g opacity="0.85">{speaker(accent, "none", 13, WAVES)}</g>',
+        "mute_on": black + tile(MUTED) + speaker(DARK_GLYPH, LIT_SCREEN, 13, CROSS),
+        "volume_down": black + dark + f'<g transform="translate(0,-16)" opacity="0.85">{speaker(accent, "none", 13, MINUS)}</g>' + track,
+        "volume_up": black + dark + f'<g transform="translate(0,-16)" opacity="0.85">{speaker(accent, "none", 13, PLUS)}</g>' + track,
+    }
+
 
 def key_svg(name, active):
     a, b = COLORS[name]
@@ -94,6 +132,11 @@ def main():
         render(key_svg(name, True), 256, OUT / f"{name}_on.png")
         for size, suffix in ((20, ""), (40, "@2x")):
             render(GLYPHS[name]("#fff", "none", 18), size, OUT / f"list_{name}{suffix}.png")
+    for name, body in audio_keys().items():
+        render(body, 256, OUT / f"{name}.png")
+    for name, extra in (("mute", WAVES), ("volume_down", MINUS), ("volume_up", PLUS)):
+        for size, suffix in ((20, ""), (40, "@2x")):
+            render(speaker("#fff", "none", 18, extra), size, OUT / f"list_{name}{suffix}.png")
     for size, suffix in ((28, ""), (56, "@2x")):
         render(extend("#fff", "none", 18), size, OUT / f"category{suffix}.png")
     render(key_svg("extend", True), 144, OUT / "plugin.png")

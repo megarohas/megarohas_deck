@@ -87,6 +87,64 @@
       "UserTitleEnabled": true,
       "Tooltip": "Show the same picture on both screens (Win+P: Duplicate)",
       "UUID": "com.megarohas.deck.display.clone"
+    },
+    {
+      "Icon": "images/list_mute",
+      "Name": "Mute",
+      "States": [
+        {
+          "Image": "images/mute_off",
+          "Name": "Sound on"
+        },
+        {
+          "Image": "images/mute_on",
+          "Name": "Muted"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "DisableAutomaticStates": true,
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Mute / unmute the sound; lights up red while muted",
+      "UUID": "com.megarohas.deck.audio.mute"
+    },
+    {
+      "Icon": "images/list_volume_down",
+      "Name": "Volume down",
+      "States": [
+        {
+          "Image": "images/volume_down",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "DisableAutomaticStates": true,
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Lower the volume (hold to keep going); the bar shows the level",
+      "UUID": "com.megarohas.deck.audio.volume_down"
+    },
+    {
+      "Icon": "images/list_volume_up",
+      "Name": "Volume up",
+      "States": [
+        {
+          "Image": "images/volume_up",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "DisableAutomaticStates": true,
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Raise the volume (hold to keep going); the bar shows the level",
+      "UUID": "com.megarohas.deck.audio.volume_up"
     }
   ],
   "SDKVersion": 1,
@@ -96,7 +154,7 @@
   "Category": "megarohas",
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
-  "Description": "Personal deck actions by megarohas: projection mode keys with live state",
+  "Description": "Personal deck actions by megarohas: projection mode and volume keys with live state",
   "Version": "1.0.0",
   "URL": "https://github.com/megarohas",
   "OS": [

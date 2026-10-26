@@ -1,6 +1,6 @@
 {
   "Name": "megarohas",
-  "Description": "Личные кнопки megarohas: режимы экранов (Win+P) с подсветкой текущего",
+  "Description": "Личные кнопки megarohas: режимы экранов (Win+P) и громкость, с подсветкой состояния",
   "Category": "megarohas",
   "com.megarohas.deck.display.internal": {
     "Name": "Только монитор",
@@ -17,5 +17,17 @@
   "com.megarohas.deck.display.clone": {
     "Name": "Дублировать",
     "Tooltip": "Одна и та же картинка на обоих экранах (Win+P: повторяющийся)"
+  },
+  "com.megarohas.deck.audio.mute": {
+    "Name": "Без звука",
+    "Tooltip": "Выключить / включить звук; горит красным, пока звук выключен"
+  },
+  "com.megarohas.deck.audio.volume_down": {
+    "Name": "Тише",
+    "Tooltip": "Убавить громкость (удержание — непрерывно); полоска показывает уровень"
+  },
+  "com.megarohas.deck.audio.volume_up": {
+    "Name": "Громче",
+    "Tooltip": "Прибавить громкость (удержание — непрерывно); полоска показывает уровень"
   }
 }
