@@ -58,7 +58,7 @@ static class Displays
         }
     }
 
-    public const uint External = 0x8;
+    public const uint Internal = 0x1, External = 0x8;
 
     // Перейти на режим, если он ещё не включён. -1 — не вышло (ТВ отключён и т. п.), 0 — уже был, 1 — переключили.
     public static int SwitchTo(uint topology)

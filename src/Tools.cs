@@ -95,7 +95,7 @@ static class Tools
     }
 
     // Shell.Application.MinimizeAll — то же, что Win+M. Через COM, а не нажатием клавиш: Win+M перехватывает DisplayHotkeys.
-    static void MinimizeAll()
+    public static void MinimizeAll()
     {
         var thread = new Thread(() =>
         {

@@ -154,6 +154,19 @@ def desktop(g, w):
             f'stroke-linecap="round" stroke-linejoin="round"/>')
 
 
+OFFICE = ("#7dd3fc", "#818cf8")
+
+
+def office_chair(g, w):
+    return (f'<rect x="88" y="34" width="80" height="84" rx="24" fill="none" stroke="{g}" stroke-width="{w}"/>'
+            f'<path d="M62 112V138M194 112V138" stroke="{g}" stroke-width="{w}" stroke-linecap="round"/>'
+            f'<rect x="68" y="130" width="120" height="26" rx="13" fill="none" stroke="{g}" stroke-width="{w}"/>'
+            f'<path d="M128 156V186M128 186L86 202M128 186L170 202M128 186V206" stroke="{g}" stroke-width="{w}" '
+            f'stroke-linecap="round" stroke-linejoin="round"/>'
+            f'<circle cx="84" cy="210" r="{w * 0.7:g}" fill="{g}"/><circle cx="172" cy="210" r="{w * 0.7:g}" fill="{g}"/>'
+            f'<circle cx="128" cy="216" r="{w * 0.7:g}" fill="{g}"/>')
+
+
 def mode_keys():
     """name -> svg body for the VPN / Big Picture / Xbox mode keys."""
     black = '<rect width="256" height="256" fill="#000"/>'
@@ -163,7 +176,9 @@ def mode_keys():
         "vpn_on": black + tile(VPN) + vpn(DARK_GLYPH, LIT_SCREEN, 13, True),
         "bigpicture_off": black + dark + f'<g opacity="0.75">{bigpicture(STEAM[0], "none", 13)}</g>',
         "bigpicture_on": black + tile(STEAM) + bigpicture(DARK_GLYPH, LIT_SCREEN, 13),
-        "xbox_mode": black + dark + f'<g opacity="0.85">{xbox_mode(XBOX[0], 13)}</g>',
+        "xbox_mode_off": black + dark + f'<g opacity="0.75">{xbox_mode(XBOX[0], 13)}</g>',
+        "xbox_mode_on": black + tile(XBOX) + xbox_mode(DARK_GLYPH, 13),
+        "office": black + dark + f'<g opacity="0.9">{office_chair(OFFICE[0], 13)}</g>',
         "couch_bigpicture": black + dark + f'<g opacity="0.9">{couch(STEAM[0], 13, bigpicture(STEAM[0], "none", 22))}</g>',
         "couch_xbox": black + dark + f'<g opacity="0.9">{couch(XBOX[0], 13, xbox_mode(XBOX[0], 22))}</g>',
         "desktop": black + dark + f'<g opacity="0.9">{desktop(DESKTOP[0], 13)}</g>',
@@ -229,7 +244,8 @@ def main():
         render(body, 256, OUT / f"{name}.png")
     for name, body in (("vpn", vpn("#fff", "none", 18, True)), ("bigpicture", bigpicture("#fff", "none", 18)),
                        ("xbox_mode", xbox_mode("#fff", 18)), ("couch", sofa("#fff", 18)),
-                       ("desktop", desktop("#fff", 18)), ("awake", coffee("#fff", "none", 18, True))):
+                       ("desktop", desktop("#fff", 18)), ("awake", coffee("#fff", "none", 18, True)),
+                       ("office", office_chair("#fff", 18))):
         for size, suffix in ((20, ""), (40, "@2x")):
             render(body, size, OUT / f"list_{name}{suffix}.png")
     render(f'<rect width="256" height="256" fill="#000"/><rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'

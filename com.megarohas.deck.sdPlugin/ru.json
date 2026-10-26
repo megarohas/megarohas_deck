@@ -44,7 +44,7 @@
   },
   "com.megarohas.deck.gaming.xbox_mode": {
     "Name": "Режим Xbox",
-    "Tooltip": "Включить / выключить режим Xbox в Windows 11 (Win+F11)"
+    "Tooltip": "Включить / выключить режим Xbox в Windows 11 (Win+F11); горит, пока он включён"
   },
   "com.megarohas.deck.gaming.couch_bigpicture": {
     "Name": "Диван: Big Picture",
@@ -52,7 +52,7 @@
   },
   "com.megarohas.deck.gaming.couch_xbox": {
     "Name": "Диван: режим Xbox",
-    "Tooltip": "Картинка только на ТВ, затем режим Xbox (Win+F11)"
+    "Tooltip": "Картинка только на ТВ, затем режим Xbox (если ещё не включён)"
   },
   "com.megarohas.deck.tools.desktop": {
     "Name": "Рабочий стол",
@@ -61,5 +61,9 @@
   "com.megarohas.deck.tools.awake": {
     "Name": "Не спать",
     "Tooltip": "Запуск / закрытие «Не спать»: пока она работает, экран не гаснет и ПК не засыпает; горит, пока активна"
+  },
+  "com.megarohas.deck.gaming.office": {
+    "Name": "Офис",
+    "Tooltip": "Обратно за стол: выйти из режима Xbox, закрыть Big Picture (Steam и Xbox остаются запущены), картинка только на монитор, свернуть все окна"
   }
 }

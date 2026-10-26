@@ -56,12 +56,14 @@ Windows указывает на ядро Hiddify (`127.0.0.1:12334`) и оно �
 | Кнопка | Что делает |
 |---|---|
 | ![](com.megarohas.deck.sdPlugin/images/bigpicture_on.png) **Steam Big Picture** | открывает / закрывает Big Picture (`steam://open/bigpicture`); горит, пока он открыт |
-| ![](com.megarohas.deck.sdPlugin/images/xbox_mode.png) **Режим Xbox** | включает / выключает режим Xbox в Windows 11 (бывший Xbox Full Screen Experience) — это Win+F11 |
-| ![](com.megarohas.deck.sdPlugin/images/couch_bigpicture.png) **Диван: Big Picture** | картинка только на ТВ, через 3 с — Big Picture (если ТВ уже был единственным экраном — сразу); кнопка Xbox на геймпаде перестаёт открывать Game Bar, чтобы её ловил только Steam |
-| ![](com.megarohas.deck.sdPlugin/images/couch_xbox.png) **Диван: режим Xbox** | картинка только на ТВ, затем Win+F11; кнопка Xbox на геймпаде снова открывает Game Bar. Если ТВ не включился — значок ошибки и дальше не идёт |
+| ![](com.megarohas.deck.sdPlugin/images/xbox_mode_on.png) **Режим Xbox** | включает / выключает режим Xbox в Windows 11 (бывший Xbox Full Screen Experience) — это Win+F11; горит, пока режим включён |
+| ![](com.megarohas.deck.sdPlugin/images/couch_bigpicture.png) **Диван: Big Picture** | картинка только на ТВ, через 3 с — Big Picture (если ТВ уже был единственным экраном — сразу) |
+| ![](com.megarohas.deck.sdPlugin/images/couch_xbox.png) **Диван: режим Xbox** | картинка только на ТВ, затем режим Xbox, если он ещё не включён. Если ТВ не включился — значок ошибки и дальше не идёт |
+| ![](com.megarohas.deck.sdPlugin/images/office.png) **Офис** | обратно за стол: выйти из режима Xbox, закрыть Big Picture (сами Steam и Xbox остаются запущенными), картинка только на монитор, свернуть все окна |
 
-Переключатель Game Bar — «Параметры → Игры → Game Bar → открывать Game Bar этой кнопкой на контроллере»
-(`HKCU\Software\Microsoft\GameBar\UseNexusForGameBarEnabled`).
+Включён ли режим Xbox, плагин узнаёт официальной функцией `IsGamingFullScreenExperienceActive()` из `gamemode.dll`.
+Чтобы кнопку Xbox на геймпаде в Big Picture ловил только Steam, в Windows выключено «Настройки → Игры → Game Bar →
+разрешить контроллеру открывать Game Bar» — только руками: запись `UseNexusForGameBarEnabled` в реестр Game Bar не замечает.
 
 ## Мелочи Windows
 

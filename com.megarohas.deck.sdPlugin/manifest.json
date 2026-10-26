@@ -212,8 +212,12 @@
       "Name": "Xbox mode",
       "States": [
         {
-          "Image": "images/xbox_mode",
-          "Name": "Default"
+          "Image": "images/xbox_mode_off",
+          "Name": "Off"
+        },
+        {
+          "Image": "images/xbox_mode_on",
+          "Name": "On"
         }
       ],
       "Controllers": [
@@ -221,8 +225,9 @@
       ],
       "SupportedInMultiActions": true,
       "UserTitleEnabled": true,
-      "Tooltip": "Toggle Xbox mode of Windows 11 (Win+F11)",
-      "UUID": "com.megarohas.deck.gaming.xbox_mode"
+      "Tooltip": "Toggle Xbox mode of Windows 11 (Win+F11); lights up while it is on",
+      "UUID": "com.megarohas.deck.gaming.xbox_mode",
+      "DisableAutomaticStates": true
     },
     {
       "Icon": "images/list_couch",
@@ -255,7 +260,7 @@
       ],
       "SupportedInMultiActions": true,
       "UserTitleEnabled": true,
-      "Tooltip": "Switch the picture to the TV only, then turn on Xbox mode (Win+F11)",
+      "Tooltip": "Switch the picture to the TV only, then turn on Xbox mode (if it is not on yet)",
       "UUID": "com.megarohas.deck.gaming.couch_xbox"
     },
     {
@@ -296,6 +301,23 @@
       "Tooltip": "Start / close NeSpat: while it runs the screen does not turn off and the PC does not sleep; lights up while active",
       "UUID": "com.megarohas.deck.tools.awake",
       "DisableAutomaticStates": true
+    },
+    {
+      "Icon": "images/list_office",
+      "Name": "Office",
+      "States": [
+        {
+          "Image": "images/office",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Back to the desk: leave Xbox mode, close Big Picture (apps keep running), picture on the monitor only, minimize all windows",
+      "UUID": "com.megarohas.deck.gaming.office"
     }
   ],
   "SDKVersion": 1,

@@ -1,89 +1,122 @@
-// Игровые режимы: Steam Big Picture (горит, пока открыт; нажатие открывает или закрывает его)
-// и режим Xbox в Windows 11 (бывший Xbox Full Screen Experience; переключается сочетанием Win+F11).
-// «Диван»: сначала картинка только на ТВ, потом Big Picture или режим Xbox; заодно кнопка Xbox на геймпаде
-// открывает Game Bar только в режиме Xbox (в Big Picture — выключено, чтобы не спорить со Steam).
+// Игровые режимы: Steam Big Picture и режим Xbox в Windows 11 (бывший Xbox Full Screen Experience,
+// переключается сочетанием Win+F11). Обе кнопки горят, пока режим открыт.
+// «Диван»: сначала картинка только на ТВ, потом Big Picture или режим Xbox.
+// «Офис»: обратно за стол — выйти из режима Xbox, закрыть Big Picture (сами Steam и Xbox остаются запущенными),
+// картинка только на монитор, свернуть все окна.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using Microsoft.Win32;
 
 static class Gaming
 {
     public const string Group = "gaming.";
 
-    static readonly HashSet<string> bigPictureKeys = new HashSet<string>();
-    static int shown = -1;
+    // context → "bigpicture" / "xbox_mode"; под lock(keys).
+    static readonly Dictionary<string, string> keys = new Dictionary<string, string>();
+    static int shownBigPicture = -1, shownXbox = -1;
 
     public static void Handle(string ev, string name, string context)
     {
-        if (name == "bigpicture")
+        if (name == "bigpicture" || name == "xbox_mode")
         {
             switch (ev)
             {
                 case "willAppear":
-                    lock (bigPictureKeys) bigPictureKeys.Add(context);
+                    lock (keys) keys[context] = name;
                     Refresh(true);
                     break;
                 case "willDisappear":
-                    lock (bigPictureKeys) bigPictureKeys.Remove(context);
+                    lock (keys) keys.Remove(context);
                     break;
                 case "keyDown":
-                    Open(BigPictureOpen() ? "steam://close/bigpicture" : "steam://open/bigpicture");
+                    if (name == "xbox_mode") SendKeys(VK_LWIN, VK_F11);
+                    else Open(BigPictureOpen() ? "steam://close/bigpicture" : "steam://open/bigpicture");
                     break;
                 case "keyUp":
-                    ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(250); Refresh(true); });
+                    ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(250); Refresh(true); Thread.Sleep(2000); Refresh(true); });
                     break;
             }
-        }
-        else if (name == "xbox_mode" && ev == "keyDown")
-        {
-            SendKeys(VK_LWIN, VK_F11);
         }
         else if ((name == "couch_bigpicture" || name == "couch_xbox") && ev == "keyDown")
         {
             bool xbox = name == "couch_xbox";
             ThreadPool.QueueUserWorkItem(_ => Couch(context, xbox));
         }
+        else if (name == "office" && ev == "keyDown")
+        {
+            ThreadPool.QueueUserWorkItem(_ => Office(context));
+        }
     }
 
     // ТВ включается не мгновенно: после переключения ждём, пока картинка устаканится, и только потом режим.
-    // Кнопку Xbox на геймпаде отдаём тому, кого запускаем: в Big Picture её иначе ловят и Game Bar, и Steam.
     static void Couch(string context, bool xbox)
     {
         int switched = Displays.SwitchTo(Displays.External);
         if (switched < 0) { Program.ShowAlert(context); return; }
-        GameBarOnControllerButton(xbox);
         if (switched > 0) Thread.Sleep(3000);
-        if (xbox) SendKeys(VK_LWIN, VK_F11);
+        if (xbox) { if (!XboxModeActive()) SendKeys(VK_LWIN, VK_F11); }
         else if (!BigPictureOpen()) Open("steam://open/bigpicture");
         Thread.Sleep(1500);
         Refresh(true);
     }
 
+    static void Office(string context)
+    {
+        if (XboxModeActive())
+        {
+            SendKeys(VK_LWIN, VK_F11);
+            WaitFor(() => !XboxModeActive(), 5000);
+        }
+        if (BigPictureOpen())
+        {
+            Open("steam://close/bigpicture");
+            WaitFor(() => !BigPictureOpen(), 5000);
+        }
+        int switched = Displays.SwitchTo(Displays.Internal);
+        if (switched < 0) Program.ShowAlert(context);
+        if (switched > 0) Thread.Sleep(2500);  // окна переезжают на монитор — сворачиваем уже после
+        Tools.MinimizeAll();
+        Refresh(true);
+    }
+
+    static void WaitFor(Func<bool> done, int timeoutMs)
+    {
+        for (int waited = 0; waited < timeoutMs && !done(); waited += 250) Thread.Sleep(250);
+    }
+
     public static void Refresh(bool force)
     {
-        int state = BigPictureOpen() ? 1 : 0;
-        lock (bigPictureKeys)
+        int bigPicture = BigPictureOpen() ? 1 : 0, xbox = XboxModeActive() ? 1 : 0;
+        lock (keys)
         {
-            if (bigPictureKeys.Count == 0 || (!force && state == shown)) return;
-            shown = state;
-            foreach (var key in bigPictureKeys) Program.SetState(key, state);
+            if (keys.Count == 0 || (!force && bigPicture == shownBigPicture && xbox == shownXbox)) return;
+            shownBigPicture = bigPicture;
+            shownXbox = xbox;
+            foreach (var key in keys) Program.SetState(key.Key, key.Value == "xbox_mode" ? xbox : bigPicture);
         }
     }
 
-    // «Параметры → Игры → Game Bar → открывать Game Bar этой кнопкой на контроллере».
-    static void GameBarOnControllerButton(bool enabled)
+    // Официальная проверка режима Xbox (Windows SDK 2025: IsGamingFullScreenExperienceActive, живёт в gamemode.dll).
+    static bool xboxCheckBroken;
+
+    static bool XboxModeActive()
     {
-        try
+        if (xboxCheckBroken) return false;
+        try { return IsGamingFullScreenExperienceActive(); }
+        catch (Exception e)
         {
-            using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\GameBar"))
-                key.SetValue("UseNexusForGameBarEnabled", enabled ? 1 : 0, RegistryValueKind.DWord);
+            xboxCheckBroken = true;
+            Program.Log("Gaming: Xbox mode check unavailable: " + e.Message);
+            return false;
         }
-        catch (Exception e) { Program.Log("Gaming: Game Bar setting: " + e.Message); }
     }
+
+    [DllImport("gamemode.dll")]
+    [return: MarshalAs(UnmanagedType.U1)]
+    static extern bool IsGamingFullScreenExperienceActive();
 
     static void Open(string uri)
     {
