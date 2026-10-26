@@ -57,8 +57,11 @@ Windows указывает на ядро Hiddify (`127.0.0.1:12334`) и оно �
 |---|---|
 | ![](com.megarohas.deck.sdPlugin/images/bigpicture_on.png) **Steam Big Picture** | открывает / закрывает Big Picture (`steam://open/bigpicture`); горит, пока он открыт |
 | ![](com.megarohas.deck.sdPlugin/images/xbox_mode.png) **Режим Xbox** | включает / выключает режим Xbox в Windows 11 (бывший Xbox Full Screen Experience) — это Win+F11 |
-| ![](com.megarohas.deck.sdPlugin/images/couch_bigpicture.png) **Диван: Big Picture** | картинка только на ТВ, через 3 с — Big Picture (если ТВ уже был единственным экраном — сразу) |
-| ![](com.megarohas.deck.sdPlugin/images/couch_xbox.png) **Диван: режим Xbox** | картинка только на ТВ, затем Win+F11; если ТВ не включился — значок ошибки и дальше не идёт |
+| ![](com.megarohas.deck.sdPlugin/images/couch_bigpicture.png) **Диван: Big Picture** | картинка только на ТВ, через 3 с — Big Picture (если ТВ уже был единственным экраном — сразу); кнопка Xbox на геймпаде перестаёт открывать Game Bar, чтобы её ловил только Steam |
+| ![](com.megarohas.deck.sdPlugin/images/couch_xbox.png) **Диван: режим Xbox** | картинка только на ТВ, затем Win+F11; кнопка Xbox на геймпаде снова открывает Game Bar. Если ТВ не включился — значок ошибки и дальше не идёт |
+
+Переключатель Game Bar — «Параметры → Игры → Game Bar → открывать Game Bar этой кнопкой на контроллере»
+(`HKCU\Software\Microsoft\GameBar\UseNexusForGameBarEnabled`).
 
 ## Мелочи Windows
 

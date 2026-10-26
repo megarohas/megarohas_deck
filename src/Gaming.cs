@@ -1,12 +1,14 @@
 // Игровые режимы: Steam Big Picture (горит, пока открыт; нажатие открывает или закрывает его)
 // и режим Xbox в Windows 11 (бывший Xbox Full Screen Experience; переключается сочетанием Win+F11).
-// «Диван»: сначала картинка только на ТВ, потом Big Picture или режим Xbox.
+// «Диван»: сначала картинка только на ТВ, потом Big Picture или режим Xbox; заодно кнопка Xbox на геймпаде
+// открывает Game Bar только в режиме Xbox (в Big Picture — выключено, чтобы не спорить со Steam).
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using Microsoft.Win32;
 
 static class Gaming
 {
@@ -48,10 +50,12 @@ static class Gaming
     }
 
     // ТВ включается не мгновенно: после переключения ждём, пока картинка устаканится, и только потом режим.
+    // Кнопку Xbox на геймпаде отдаём тому, кого запускаем: в Big Picture её иначе ловят и Game Bar, и Steam.
     static void Couch(string context, bool xbox)
     {
         int switched = Displays.SwitchTo(Displays.External);
         if (switched < 0) { Program.ShowAlert(context); return; }
+        GameBarOnControllerButton(xbox);
         if (switched > 0) Thread.Sleep(3000);
         if (xbox) SendKeys(VK_LWIN, VK_F11);
         else if (!BigPictureOpen()) Open("steam://open/bigpicture");
@@ -68,6 +72,17 @@ static class Gaming
             shown = state;
             foreach (var key in bigPictureKeys) Program.SetState(key, state);
         }
+    }
+
+    // «Параметры → Игры → Game Bar → открывать Game Bar этой кнопкой на контроллере».
+    static void GameBarOnControllerButton(bool enabled)
+    {
+        try
+        {
+            using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\GameBar"))
+                key.SetValue("UseNexusForGameBarEnabled", enabled ? 1 : 0, RegistryValueKind.DWord);
+        }
+        catch (Exception e) { Program.Log("Gaming: Game Bar setting: " + e.Message); }
     }
 
     static void Open(string uri)
