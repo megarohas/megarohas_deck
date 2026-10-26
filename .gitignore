@@ -1,0 +1,3 @@
+com.megarohas.deck.sdPlugin/*.exe
+*.log
+__pycache__/

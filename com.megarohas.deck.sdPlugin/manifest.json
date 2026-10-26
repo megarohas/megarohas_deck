@@ -1,0 +1,111 @@
+{
+  "Actions": [
+    {
+      "Icon": "images/list_internal",
+      "Name": "Monitor only",
+      "States": [
+        {
+          "Image": "images/internal_off",
+          "Name": "Off"
+        },
+        {
+          "Image": "images/internal_on",
+          "Name": "Active"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "DisableAutomaticStates": true,
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Show the picture on the computer monitor only (Win+P: PC screen only)",
+      "UUID": "com.megarohas.deck.display.internal"
+    },
+    {
+      "Icon": "images/list_external",
+      "Name": "TV only",
+      "States": [
+        {
+          "Image": "images/external_off",
+          "Name": "Off"
+        },
+        {
+          "Image": "images/external_on",
+          "Name": "Active"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "DisableAutomaticStates": true,
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Show the picture on the TV only (Win+P: Second screen only)",
+      "UUID": "com.megarohas.deck.display.external"
+    },
+    {
+      "Icon": "images/list_extend",
+      "Name": "Extend",
+      "States": [
+        {
+          "Image": "images/extend_off",
+          "Name": "Off"
+        },
+        {
+          "Image": "images/extend_on",
+          "Name": "Active"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "DisableAutomaticStates": true,
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Extend the desktop across both screens (Win+P: Extend)",
+      "UUID": "com.megarohas.deck.display.extend"
+    },
+    {
+      "Icon": "images/list_clone",
+      "Name": "Duplicate",
+      "States": [
+        {
+          "Image": "images/clone_off",
+          "Name": "Off"
+        },
+        {
+          "Image": "images/clone_on",
+          "Name": "Active"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "DisableAutomaticStates": true,
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Show the same picture on both screens (Win+P: Duplicate)",
+      "UUID": "com.megarohas.deck.display.clone"
+    }
+  ],
+  "SDKVersion": 1,
+  "Author": "megarohas",
+  "Name": "megarohas",
+  "Icon": "images/plugin",
+  "Category": "megarohas",
+  "CategoryIcon": "images/category",
+  "CodePath": "MegarohasDeck.exe",
+  "Description": "Personal deck actions by megarohas: projection mode keys with live state",
+  "Version": "1.0.0",
+  "URL": "https://github.com/megarohas",
+  "OS": [
+    {
+      "Platform": "windows",
+      "MinimumVersion": "10"
+    }
+  ],
+  "Software": {
+    "MinimumVersion": "2.9"
+  }
+}

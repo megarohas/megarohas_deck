@@ -1,0 +1,21 @@
+{
+  "Name": "megarohas",
+  "Description": "Личные кнопки megarohas: режимы экранов (Win+P) с подсветкой текущего",
+  "Category": "megarohas",
+  "com.megarohas.deck.display.internal": {
+    "Name": "Только монитор",
+    "Tooltip": "Картинка только на мониторе компьютера (Win+P: только экран компьютера)"
+  },
+  "com.megarohas.deck.display.external": {
+    "Name": "Только ТВ",
+    "Tooltip": "Картинка только на телевизоре (Win+P: только второй экран)"
+  },
+  "com.megarohas.deck.display.extend": {
+    "Name": "Расширить",
+    "Tooltip": "Рабочий стол на оба экрана (Win+P: расширить)"
+  },
+  "com.megarohas.deck.display.clone": {
+    "Name": "Дублировать",
+    "Tooltip": "Одна и та же картинка на обоих экранах (Win+P: повторяющийся)"
+  }
+}
