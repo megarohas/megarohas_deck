@@ -11,6 +11,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Management;
 using System.Net.WebSockets;
 using System.Security.Cryptography;
 using System.Text;
@@ -76,12 +77,20 @@ static class Record
         }
     }
 
+    // PID того OBS, связь с которым оборвалась: он закрывается (закрытие у OBS занимает до пары минут) или в нём
+    // выключили websocket. К нему не переподключаемся — попытки подключения не дают ему закрыться.
+    static int deadPid;
+    static DateTime lastAttempt;
+
     // Раз в секунду: время на клавише и подхват OBS, запущенного вручную (если запись идёт из самого OBS).
     public static void Tick()
     {
         lock (sync) if (status == Status.Recording && keys.Count > 0) Show();
-        if (Connected() || Process.GetProcessesByName("obs64").Length == 0) return;
+        if (Connected()) return;
+        int pid = ObsPid();
+        if (pid == 0 || pid == deadPid || (DateTime.Now - lastAttempt).TotalSeconds < 5) return;
         if (Interlocked.Exchange(ref connecting, 1) == 1) return;
+        lastAttempt = DateTime.Now;
         ThreadPool.QueueUserWorkItem(_ =>
         {
             try { Connect(); }
@@ -99,22 +108,25 @@ static class Record
         if (Interlocked.Exchange(ref warmed, 1) == 1) return;
         ThreadPool.QueueUserWorkItem(_ =>
         {
-            try { if (!ObsRunning()) LaunchObs(); }
+            try { if (ObsPid() == 0) LaunchObs(); }
             catch (Exception e) { Program.Log("Record: warm-up: " + e.Message); }
         });
     }
 
-    static bool ObsRunning()
+    static int ObsPid()
     {
         var running = Process.GetProcessesByName("obs64");
+        int pid = running.Length > 0 ? running[0].Id : 0;
         foreach (var p in running) p.Dispose();
-        return running.Length > 0;
+        return pid;
     }
 
-    // OBS 32 убрал флаг --disable-shutdown-check, а после выключения ПК с OBS в трее считает закрытие аварийным и
-    // при следующем запуске молча ждёт ответа в окне «безопасный режим». Отметки о запуске лежат в .sentinel —
-    // пока OBS не запущен, это остатки прошлого сеанса (run_*, см. frontend/utility/CrashHandler.cpp), удаляем их,
-    // и окно не появляется.
+    // OBS 32 убрал флаг --disable-shutdown-check, а после аварийного закрытия молча ждёт ответа в окне «безопасный
+    // режим». Отметки о запуске лежат в .sentinel — пока OBS не запущен, это остатки прошлого сеанса
+    // (run_*, см. frontend/utility/CrashHandler.cpp), удаляем их, и окно не появляется.
+    // Сам OBS создаём через WMI (Win32_Process.Create): софт деки держит себя и плагины в Windows Job и при
+    // перезапуске убивает всех потомков — запущенный напрямую OBS погибал бы вместе с ним (и снова «аварийно»).
+    // Процесс от WMI порождает служба WmiPrvSE, в Job он не попадает. (Через explorer.exe из Job не выходит.)
     static void LaunchObs()
     {
         string sentinel = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "obs-studio", ".sentinel");
@@ -122,23 +134,46 @@ static class Record
             foreach (var file in Directory.GetFiles(sentinel, "run_*"))
                 try { File.Delete(file); }
                 catch (Exception e) { Program.Log("Record: sentinel: " + e.Message); }
-        Process.Start(new ProcessStartInfo(Path.Combine(ObsDir, "obs64.exe"), "--minimize-to-tray --disable-updater")
+        string exe = Path.Combine(ObsDir, "obs64.exe"), args = "--minimize-to-tray --disable-updater";
+        try
         {
-            WorkingDirectory = ObsDir,
-            UseShellExecute = false,
-        });
+            using (var processClass = new ManagementClass("Win32_Process"))
+            {
+                object result = processClass.InvokeMethod("Create", new object[] { "\"" + exe + "\" " + args, ObsDir, null, null });
+                if (Convert.ToUInt32(result) != 0) throw new Exception("Win32_Process.Create returned " + result);
+            }
+        }
+        catch (Exception e)
+        {
+            Program.Log("Record: start via WMI: " + e.Message);
+            Process.Start(new ProcessStartInfo(exe, args) { WorkingDirectory = ObsDir, UseShellExecute = false });
+        }
     }
 
+    // Нажатие на запись, а связи с OBS нет: если OBS не запущен — запускаем; если он как раз закрывается —
+    // ждём, пока закроется, и запускаем заново; потом подключаемся.
     static void Start()
     {
         if (!Connected())
         {
-            if (!ObsRunning()) LaunchObs();
-            var deadline = DateTime.Now.AddSeconds(30);
+            var deadline = DateTime.Now.AddSeconds(60);
+            int launches = 0;
             while (true)
             {
-                try { Connect(); break; }
-                catch { if (DateTime.Now > deadline) throw; Thread.Sleep(500); }
+                int pid = ObsPid();
+                if (pid == 0)
+                {
+                    if (launches++ == 2) throw new Exception("OBS does not start");
+                    LaunchObs();
+                    Thread.Sleep(2000);
+                }
+                else if (pid != deadPid)
+                {
+                    try { Connect(); break; }
+                    catch { }
+                }
+                if (DateTime.Now > deadline) throw new Exception("OBS websocket is not reachable");
+                Thread.Sleep(500);
             }
         }
         if (Bool(obs.Call("GetRecordStatus"), "outputActive")) return;  // уже пишет — просто подхватили
@@ -218,14 +253,21 @@ static class Record
 
     static void Connect()
     {
+        int pid = ObsPid();
         var o = new Obs();
         o.RecordStateChanged = OnRecordState;
         o.Closed = () =>
         {
+            if (o.Identified) deadPid = pid;
             lock (sync) if (status != Status.Idle) status = Status.Idle;
             Show();
         };
-        o.Connect(ReadPassword());
+        try { o.Connect(ReadPassword()); }
+        catch
+        {
+            o.Dispose();  // недоделанное соединение тоже держит OBS при закрытии
+            throw;
+        }
         obs = o;
         var record = o.Call("GetRecordStatus");
         lock (sync)
@@ -354,7 +396,21 @@ static class Record
 
         public Action<Dictionary<string, object>> RecordStateChanged;
         public Action Closed;
-        public bool Open { get { return ws.State == WebSocketState.Open; } }
+        public bool Open
+        {
+            get
+            {
+                try { return ws.State == WebSocketState.Open; }
+                catch (ObjectDisposedException) { return false; }
+            }
+        }
+        public bool Identified { get { return identified.WaitOne(0); } }
+
+        public void Dispose()
+        {
+            try { ws.Abort(); } catch { }
+            try { ws.Dispose(); } catch { }
+        }
 
         class Pending
         {
@@ -400,6 +456,8 @@ static class Record
             lock (sendLock) ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None).Wait();
         }
 
+        // Когда OBS закрывается, он присылает Close: отвечаем на него и сразу освобождаем сокет. Иначе OBS ждёт
+        // ответа 5 с, а потом ещё 2 минуты не может закрыться, пока висящее соединение не отвалится по таймауту.
         void ReadLoop()
         {
             var buffer = new byte[64 * 1024];
@@ -409,7 +467,12 @@ static class Record
                 while (ws.State == WebSocketState.Open)
                 {
                     var r = ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None).Result;
-                    if (r.MessageType == WebSocketMessageType.Close) break;
+                    if (r.MessageType == WebSocketMessageType.Close)
+                    {
+                        try { ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None).Wait(1000); }
+                        catch { }
+                        break;
+                    }
                     message.Write(buffer, 0, r.Count);
                     if (!r.EndOfMessage) continue;
                     var msg = json.Deserialize<Dictionary<string, object>>(Encoding.UTF8.GetString(message.ToArray()));
@@ -418,6 +481,7 @@ static class Record
                 }
             }
             catch (Exception e) { Program.Log("obs-websocket: " + e.Message); }
+            Dispose();
             if (Closed != null) Closed();
         }
 

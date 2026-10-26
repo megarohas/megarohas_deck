@@ -101,6 +101,10 @@ software (293V3, N3, N4, Ajazz AKP153…) should work too — the keys use the s
   Windows down with OBS in the tray leaves `run_*` marks in `%APPDATA%\obs-studio\.sentinel` — the next start then
   waits silently on a safe-mode dialog. The plugin deletes those leftovers (only while OBS is not running) before it
   starts OBS, so the tray start never gets stuck.
+- **The deck software kills its plugins' children.** fifine Control Deck runs itself and every plugin inside a Windows
+  job object, so anything a plugin starts directly dies (uncleanly) whenever the software restarts. The plugin starts OBS
+  through WMI (`Win32_Process.Create`) instead, which puts it outside the job; starting it via `explorer.exe` from inside
+  the job does not work.
 - **Boot logo:** *Settings → Device → Replace boot logo* takes an 800×480 image shown through the 5×3 key windows
   (160 px per key). `bootlogo/make_bootlogo.py` draws grid-aware logos and a preview through the keys.
 
@@ -226,6 +230,9 @@ fifine Control Deck / StreamDock.
   а выключение Windows с OBS в трее оставляет отметки `run_*` в `%APPDATA%\obs-studio\.sentinel` — следующий запуск
   молча висит на окне безопасного режима. Плагин удаляет эти остатки (только пока OBS не запущен) перед запуском OBS,
   поэтому старт в трей не зависает.
+- **Софт деки убивает потомков своих плагинов.** fifine Control Deck держит себя и все плагины в Windows Job, поэтому
+  всё, что плагин запустил напрямую, умирает (аварийно) при каждом перезапуске софта. Плагин запускает OBS через WMI
+  (`Win32_Process.Create`) — так он оказывается вне Job; через `explorer.exe` изнутри Job это не работает.
 - **Загрузочная картинка:** *Настройки → Оборудование → Заменить логотип запуска* — 800×480, видна сквозь окна
   клавиш 5×3 (по 160 px на клавишу). `bootlogo/make_bootlogo.py` рисует логотипы под сетку и превью «сквозь клавиши».
 
