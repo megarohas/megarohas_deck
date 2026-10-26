@@ -48,8 +48,9 @@ Works with whatever output is the default right now (TV, headphones…).
 ### Recording
 
 <img src="com.megarohas.deck.sdPlugin/images/record_off.png" width="56"> **Record screen** — one tap to start recording the
-main screen with **OBS without opening its window**: OBS is started minimized to the tray if needed, switched to a
-`deck_record` scene for the recording and switched back afterwards. The key turns red with a running timer.
+main screen with **OBS without opening its window**, even on top of Big Picture: while the key is on the deck, the
+plugin keeps OBS running minimized to the tray (the deck software starts with Windows, so OBS does too). For the
+recording OBS is switched to a `deck_record` scene and switched back afterwards. The key turns red with a running timer.
 Needs OBS 28+ with the built-in WebSocket server enabled (*Tools → WebSocket Server Settings*); the plugin reads the
 password from OBS's own config, nothing to type.
 
@@ -96,6 +97,10 @@ software (293V3, N3, N4, Ajazz AKP153…) should work too — the keys use the s
   9 modes, long press — off/on.
 - **Xbox button opens both Game Bar and the Big Picture menu?** Turn off *Settings → Gaming → Game Bar → Allow your
   controller to open Game Bar* (in Settings — writing `UseNexusForGameBarEnabled` to the registry is ignored).
+- **OBS 32 "did not shut down properly / safe mode" prompt.** OBS 32 removed `--disable-shutdown-check`, and shutting
+  Windows down with OBS in the tray leaves `run_*` marks in `%APPDATA%\obs-studio\.sentinel` — the next start then
+  waits silently on a safe-mode dialog. The plugin deletes those leftovers (only while OBS is not running) before it
+  starts OBS, so the tray start never gets stuck.
 - **Boot logo:** *Settings → Device → Replace boot logo* takes an 800×480 image shown through the 5×3 key windows
   (160 px per key). `bootlogo/make_bootlogo.py` draws grid-aware logos and a preview through the keys.
 
@@ -168,8 +173,9 @@ every incoming message to `MegarohasDeck.log`.
 ### Запись
 
 <img src="com.megarohas.deck.sdPlugin/images/record_off.png" width="56"> **Запись экрана** — одно нажатие, и основной экран
-пишется через **OBS, не открывая его окно**: если OBS не запущен, он стартует свёрнутым в трей, на время записи
-переключается на сцену `deck_record`, потом возвращается на прежнюю. Кнопка красная, на ней тикает время.
+пишется через **OBS, не открывая его окно**, даже поверх Big Picture: пока кнопка есть на деке, плагин держит OBS
+запущенным в трее (софт деки стартует с Windows — значит, и OBS). На время записи OBS переключается на сцену
+`deck_record`, потом возвращается на прежнюю. Кнопка красная, на ней тикает время.
 Нужен OBS 28+ с включённым встроенным WebSocket-сервером (*Инструменты → Настройки сервера WebSocket*); пароль плагин
 берёт из конфига самого OBS, вводить ничего не надо.
 
@@ -216,6 +222,10 @@ fifine Control Deck / StreamDock.
   из 9 режимов, долгое — выключить/включить.
 - **Кнопка Xbox открывает и Game Bar, и меню Big Picture?** Выключи *Настройки → Игры → Game Bar → Разрешить контроллеру
   открывать Game Bar* (именно в настройках — запись `UseNexusForGameBarEnabled` в реестр не действует).
+- **OBS 32 и окно «OBS неправильно завершил работу / безопасный режим».** В OBS 32 убрали `--disable-shutdown-check`,
+  а выключение Windows с OBS в трее оставляет отметки `run_*` в `%APPDATA%\obs-studio\.sentinel` — следующий запуск
+  молча висит на окне безопасного режима. Плагин удаляет эти остатки (только пока OBS не запущен) перед запуском OBS,
+  поэтому старт в трей не зависает.
 - **Загрузочная картинка:** *Настройки → Оборудование → Заменить логотип запуска* — 800×480, видна сквозь окна
   клавиш 5×3 (по 160 px на клавишу). `bootlogo/make_bootlogo.py` рисует логотипы под сетку и превью «сквозь клавиши».
 

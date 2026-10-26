@@ -1,7 +1,8 @@
 // Кнопка «Запись»: запись экрана через OBS, не открывая его окно.
-// Нажатие: если OBS не запущен — запускаем его свёрнутым в трей; ставим сцену deck_record с захватом
-// основного экрана (того, что сейчас на 0,0 — монитор или ТВ) и начинаем запись. Повторное нажатие — стоп,
-// и OBS возвращается на прежнюю сцену. Пока идёт запись, клавиша красная и на ней тикает время.
+// Пока кнопка есть на деке, OBS держится запущенным в трее (дека стартует с Windows — значит, и OBS), чтобы запись
+// начиналась сразу, в том числе поверх Big Picture. Нажатие: ставим сцену deck_record с захватом основного экрана
+// (того, что сейчас на 0,0 — монитор или ТВ) и начинаем запись. Повторное нажатие — стоп, и OBS возвращается на
+// прежнюю сцену. Пока идёт запись, клавиша красная и на ней тикает время.
 // Связь — obs-websocket v5 (встроен в OBS 28+), пароль берётся из его config.json.
 using System;
 using System.Collections.Generic;
@@ -42,6 +43,7 @@ static class Record
             case "willAppear":
                 lock (sync) keys.Add(context);
                 Show();
+                Warm();
                 break;
             case "willDisappear":
                 lock (sync) keys.Remove(context);
@@ -88,16 +90,50 @@ static class Record
         });
     }
 
+    // Один раз за запуск плагина: если OBS не запущен, поднимаем его в трей. Если потом закрыть OBS руками,
+    // плагин не воскрешает его до следующего старта софта деки (или до нажатия записи).
+    static int warmed;
+
+    static void Warm()
+    {
+        if (Interlocked.Exchange(ref warmed, 1) == 1) return;
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            try { if (!ObsRunning()) LaunchObs(); }
+            catch (Exception e) { Program.Log("Record: warm-up: " + e.Message); }
+        });
+    }
+
+    static bool ObsRunning()
+    {
+        var running = Process.GetProcessesByName("obs64");
+        foreach (var p in running) p.Dispose();
+        return running.Length > 0;
+    }
+
+    // OBS 32 убрал флаг --disable-shutdown-check, а после выключения ПК с OBS в трее считает закрытие аварийным и
+    // при следующем запуске молча ждёт ответа в окне «безопасный режим». Отметки о запуске лежат в .sentinel —
+    // пока OBS не запущен, это остатки прошлого сеанса (run_*, см. frontend/utility/CrashHandler.cpp), удаляем их,
+    // и окно не появляется.
+    static void LaunchObs()
+    {
+        string sentinel = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "obs-studio", ".sentinel");
+        if (Directory.Exists(sentinel))
+            foreach (var file in Directory.GetFiles(sentinel, "run_*"))
+                try { File.Delete(file); }
+                catch (Exception e) { Program.Log("Record: sentinel: " + e.Message); }
+        Process.Start(new ProcessStartInfo(Path.Combine(ObsDir, "obs64.exe"), "--minimize-to-tray --disable-updater")
+        {
+            WorkingDirectory = ObsDir,
+            UseShellExecute = false,
+        });
+    }
+
     static void Start()
     {
         if (!Connected())
         {
-            if (Process.GetProcessesByName("obs64").Length == 0)
-                Process.Start(new ProcessStartInfo(Path.Combine(ObsDir, "obs64.exe"), "--minimize-to-tray --disable-shutdown-check")
-                {
-                    WorkingDirectory = ObsDir,
-                    UseShellExecute = false,
-                });
+            if (!ObsRunning()) LaunchObs();
             var deadline = DateTime.Now.AddSeconds(30);
             while (true)
             {
