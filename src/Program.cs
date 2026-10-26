@@ -1,6 +1,6 @@
 // MegarohasDeck — личный плагин megarohas для fifine Control Deck
 // (движок Mirabox StreamDock, протокол как у Elgato Stream Deck).
-// Здесь — WebSocket-связь с софтом деки и раздача событий по модулям (Displays, Audio, Lights, Record).
+// Здесь — WebSocket-связь с софтом деки и раздача событий по модулям (Displays, Audio, Record).
 // Сборка: build.ps1 (csc из .NET Framework 4, C# 5).
 using System;
 using System.Collections.Generic;
@@ -58,15 +58,10 @@ static class Program
     static void Dispatch(Dictionary<string, object> msg)
     {
         string ev = Field(msg, "event"), action = Field(msg, "action"), context = Field(msg, "context");
-        string device = Field(msg, "device");
-        if (ev == "systemDidWakeUp") ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(3000); Lights.Apply(); });
         if (ev == null || action == null || context == null || !action.StartsWith(Prefix)) return;
-        if (ev == "willAppear" && device != null) Lights.KeyAppeared(device, action, context);
-        else if (ev == "willDisappear") Lights.KeyDisappeared(context);
         string name = action.Substring(Prefix.Length);
         if (name.StartsWith(Displays.Group)) Displays.Handle(ev, name.Substring(Displays.Group.Length), context);
         else if (name.StartsWith(Audio.Group)) Audio.Handle(ev, name.Substring(Audio.Group.Length), context);
-        else if (name.StartsWith(Lights.Group)) Lights.Handle(ev, name.Substring(Lights.Group.Length), context);
         else if (name.StartsWith(Record.Group)) Record.Handle(ev, name.Substring(Record.Group.Length), context);
     }
 

@@ -262,7 +262,7 @@ static class Record
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
             g.Clear(Color.Black);
-            using (var tile = Lights.RoundedRect(new Rectangle(0, 0, 256, 256), 44))
+            using (var tile = RoundedRect(new Rectangle(0, 0, 256, 256), 44))
             using (var brush = new LinearGradientBrush(new Point(0, 0), new Point(256, 256),
                 ColorTranslator.FromHtml("#fb7185"), ColorTranslator.FromHtml("#dc2626")))
                 g.FillPath(brush, tile);
@@ -278,6 +278,18 @@ static class Record
             image.Save(output, ImageFormat.Png);
             return "data:image/png;base64," + Convert.ToBase64String(output.ToArray());
         }
+    }
+
+    static GraphicsPath RoundedRect(Rectangle r, int radius)
+    {
+        var path = new GraphicsPath();
+        int d = radius * 2;
+        path.AddArc(r.X, r.Y, d, d, 180, 90);
+        path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+        path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+        path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+        path.CloseFigure();
+        return path;
     }
 
     static string Str(Dictionary<string, object> d, string key)

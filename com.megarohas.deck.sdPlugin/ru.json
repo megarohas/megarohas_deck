@@ -1,6 +1,6 @@
 {
   "Name": "megarohas",
-  "Description": "Личные кнопки megarohas: экраны (Win+P), громкость, подсветка деки и запись экрана, с живым состоянием",
+  "Description": "Личные кнопки megarohas: экраны (Win+P), громкость и запись экрана, с живым состоянием",
   "Category": "megarohas",
   "com.megarohas.deck.display.internal": {
     "Name": "Только монитор",
@@ -29,10 +29,6 @@
   "com.megarohas.deck.audio.volume_up": {
     "Name": "Громче",
     "Tooltip": "Прибавить громкость (удержание — непрерывно); полоска показывает уровень"
-  },
-  "com.megarohas.deck.lights.color": {
-    "Name": "Подсветка",
-    "Tooltip": "Статичный цвет RGB-кольца деки; каждое нажатие — следующий цвет (последний — выключить)"
   },
   "com.megarohas.deck.record.toggle": {
     "Name": "Запись экрана",
