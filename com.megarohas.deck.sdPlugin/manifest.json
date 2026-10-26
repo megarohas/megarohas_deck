@@ -164,28 +164,6 @@
       "UUID": "com.megarohas.deck.record.toggle"
     },
     {
-      "Icon": "images/list_vpn",
-      "Name": "VPN (Hiddify)",
-      "States": [
-        {
-          "Image": "images/vpn_off",
-          "Name": "Off"
-        },
-        {
-          "Image": "images/vpn_on",
-          "Name": "On"
-        }
-      ],
-      "Controllers": [
-        "Keypad"
-      ],
-      "SupportedInMultiActions": true,
-      "UserTitleEnabled": true,
-      "Tooltip": "Hiddify in system proxy mode: lights up while traffic goes through the VPN; press to switch the system proxy off/on (opens Hiddify if its core is not running)",
-      "UUID": "com.megarohas.deck.vpn.toggle",
-      "DisableAutomaticStates": true
-    },
-    {
       "Icon": "images/list_bigpicture",
       "Name": "Steam Big Picture",
       "States": [
@@ -327,7 +305,7 @@
   "Category": "megarohas",
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
-  "Description": "Personal deck actions by megarohas: displays, volume, recording, VPN, gaming modes and desktop tools with live state",
+  "Description": "Personal deck actions by megarohas: displays, volume, recording, gaming modes and desktop tools with live state",
   "Version": "1.0.0",
   "URL": "https://github.com/megarohas",
   "OS": [

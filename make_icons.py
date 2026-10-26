@@ -84,7 +84,6 @@ def tile(colors):
             f'<rect width="256" height="256" rx="44" fill="url(#t)"/>')
 
 
-VPN = ("#6ee7b7", "#10b981")
 STEAM = ("#93c5fd", "#3b82f6")
 XBOX = ("#86efac", "#16a34a")
 
@@ -96,14 +95,6 @@ def gamepad(g, s, w):
     return (f'<path d="{PAD}" fill="{s}" stroke="{g}" stroke-width="{w}" stroke-linejoin="round"/>'
             f'<path d="M86 122V146M74 134H98" stroke="{g}" stroke-width="{w * 0.8:g}" stroke-linecap="round"/>'
             f'<circle cx="166" cy="124" r="{w * 0.62:g}" fill="{g}"/><circle cx="182" cy="142" r="{w * 0.62:g}" fill="{g}"/>')
-
-
-def vpn(g, s, w, on):
-    shield = "M128 38L196 64V120C196 164 166 196 128 214C90 196 60 164 60 120V64Z"
-    path = "M98 126L120 148L160 104" if on else "M106 104L150 148M150 104L106 148"
-    mark = (f'<path d="{path}" fill="none" stroke="{g}" stroke-width="{w}" stroke-linecap="round" '
-            f'stroke-linejoin="round"/>')
-    return f'<path d="{shield}" fill="{s}" stroke="{g}" stroke-width="{w}" stroke-linejoin="round"/>{mark}'
 
 
 def bigpicture(g, s, w):
@@ -168,12 +159,10 @@ def office_chair(g, w):
 
 
 def mode_keys():
-    """name -> svg body for the VPN / Big Picture / Xbox mode keys."""
+    """name -> svg body for the Big Picture / Xbox mode / couch / desktop keys."""
     black = '<rect width="256" height="256" fill="#000"/>'
     dark = f'<rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'
     return {
-        "vpn_off": black + dark + f'<g opacity="0.75">{vpn(VPN[0], "none", 13, False)}</g>',
-        "vpn_on": black + tile(VPN) + vpn(DARK_GLYPH, LIT_SCREEN, 13, True),
         "bigpicture_off": black + dark + f'<g opacity="0.75">{bigpicture(STEAM[0], "none", 13)}</g>',
         "bigpicture_on": black + tile(STEAM) + bigpicture(DARK_GLYPH, LIT_SCREEN, 13),
         "xbox_mode_off": black + dark + f'<g opacity="0.75">{xbox_mode(XBOX[0], 13)}</g>',
@@ -242,7 +231,7 @@ def main():
             render(speaker("#fff", "none", 18, extra), size, OUT / f"list_{name}{suffix}.png")
     for name, body in mode_keys().items():
         render(body, 256, OUT / f"{name}.png")
-    for name, body in (("vpn", vpn("#fff", "none", 18, True)), ("bigpicture", bigpicture("#fff", "none", 18)),
+    for name, body in (("bigpicture", bigpicture("#fff", "none", 18)),
                        ("xbox_mode", xbox_mode("#fff", 18)), ("couch", sofa("#fff", 18)),
                        ("desktop", desktop("#fff", 18)), ("awake", coffee("#fff", "none", 18, True)),
                        ("office", office_chair("#fff", 18))):

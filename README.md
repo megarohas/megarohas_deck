@@ -43,14 +43,6 @@ RGB-кольцо D6 программно не управляется: ни ко�
 (`S:\obs_records`), звук — как настроен в OBS. Нужен включённый obs-websocket (Инструменты → Настройки сервера
 WebSocket); пароль плагин берёт из его `config.json`. Запись, начатая в самом OBS, тоже подсвечивается.
 
-## VPN (Hiddify)
-
-![](com.megarohas.deck.sdPlugin/images/vpn_on.png) **VPN** — для Hiddify в режиме «Системный прокси». Горит, пока прокси
-Windows указывает на ядро Hiddify (`127.0.0.1:12334`) и оно отвечает, то есть трафик идёт через VPN. Снаружи Hiddify
-не управляется (нет API и CLI для запущенного приложения, deep-link `hiddify://` — только импорт профилей), поэтому
-нажатие переключает сам системный прокси: выкл — трафик напрямую, вкл — снова через Hiddify. Сам Hiddify при этом
-остаётся «подключённым». Если ядро Hiddify не запущено, нажатие открывает его окно — подключиться там.
-
 ## Игровые режимы
 
 | Кнопка | Что делает |
@@ -60,6 +52,9 @@ Windows указывает на ядро Hiddify (`127.0.0.1:12334`) и оно �
 | ![](com.megarohas.deck.sdPlugin/images/couch_bigpicture.png) **Диван: Big Picture** | картинка только на ТВ, через 3 с — Big Picture (если ТВ уже был единственным экраном — сразу) |
 | ![](com.megarohas.deck.sdPlugin/images/couch_xbox.png) **Диван: режим Xbox** | картинка только на ТВ, затем режим Xbox, если он ещё не включён. Если ТВ не включился — значок ошибки и дальше не идёт |
 | ![](com.megarohas.deck.sdPlugin/images/office.png) **Офис** | обратно за стол: выйти из режима Xbox, закрыть Big Picture (сами Steam и Xbox остаются запущенными), картинка только на монитор, свернуть все окна |
+
+Big Picture и режим Xbox никогда не работают одновременно: включение одного (кнопкой режима или «Диваном») сначала
+выключает другой, «Офис» выключает оба.
 
 Включён ли режим Xbox, плагин узнаёт официальной функцией `IsGamingFullScreenExperienceActive()` из `gamemode.dll`.
 Чтобы кнопку Xbox на геймпаде в Big Picture ловил только Steam, в Windows выключено «Настройки → Игры → Game Bar →
@@ -81,7 +76,7 @@ Windows указывает на ядро Hiddify (`127.0.0.1:12334`) и оно �
 
 - `com.megarohas.deck.sdPlugin/` — сам плагин: `manifest.json`, `ru.json`, картинки; сюда же собирается `MegarohasDeck.exe`.
 - `src/` — исходники exe: `Program.cs` (WebSocket-протокол StreamDock), `Displays.cs` (режимы экранов), `Audio.cs` (громкость),
-  `Record.cs` (запись через obs-websocket), `Vpn.cs` (Hiddify), `Gaming.cs` (Big Picture, режим Xbox, «Диван»),
+  `Record.cs` (запись через obs-websocket), `Gaming.cs` (Big Picture, режим Xbox, «Диван», «Офис»),
   `Tools.cs` («Рабочий стол», «Не спать»).
 - `build.ps1` — сборка exe (csc из .NET Framework 4, ничего ставить не надо).
 - `make_icons.py` — рисует картинки кнопок (SVG → PNG через Edge в headless-режиме, только стандартная библиотека Python).

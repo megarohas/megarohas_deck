@@ -1,6 +1,6 @@
 {
   "Name": "megarohas",
-  "Description": "Личные кнопки megarohas: экраны, громкость, запись, VPN, игровые режимы и мелочи Windows, с живым состоянием",
+  "Description": "Личные кнопки megarohas: экраны, громкость, запись, игровые режимы и мелочи Windows, с живым состоянием",
   "Category": "megarohas",
   "com.megarohas.deck.display.internal": {
     "Name": "Только монитор",
@@ -33,10 +33,6 @@
   "com.megarohas.deck.record.toggle": {
     "Name": "Запись экрана",
     "Tooltip": "Запуск / остановка записи основного экрана через OBS в фоне (сам запускает OBS в трее); пока идёт запись — красная, с таймером"
-  },
-  "com.megarohas.deck.vpn.toggle": {
-    "Name": "VPN (Hiddify)",
-    "Tooltip": "Hiddify в режиме системного прокси: горит, пока трафик идёт через VPN; нажатие выключает/включает системный прокси (если ядро Hiddify не запущено — открывает Hiddify)"
   },
   "com.megarohas.deck.gaming.bigpicture": {
     "Name": "Steam Big Picture",

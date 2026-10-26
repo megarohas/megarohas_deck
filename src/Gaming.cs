@@ -1,5 +1,6 @@
 // Игровые режимы: Steam Big Picture и режим Xbox в Windows 11 (бывший Xbox Full Screen Experience,
-// переключается сочетанием Win+F11). Обе кнопки горят, пока режим открыт.
+// переключается сочетанием Win+F11). Обе кнопки горят, пока режим открыт. Вместе режимы не работают:
+// включение одного сначала выключает другой.
 // «Диван»: сначала картинка только на ТВ, потом Big Picture или режим Xbox.
 // «Офис»: обратно за стол — выйти из режима Xbox, закрыть Big Picture (сами Steam и Xbox остаются запущенными),
 // картинка только на монитор, свернуть все окна.
@@ -32,23 +33,40 @@ static class Gaming
                     lock (keys) keys.Remove(context);
                     break;
                 case "keyDown":
-                    if (name == "xbox_mode") SendKeys(VK_LWIN, VK_F11);
-                    else Open(BigPictureOpen() ? "steam://close/bigpicture" : "steam://open/bigpicture");
+                    if (name == "xbox_mode") Run(() => { if (XboxModeActive()) ExitXboxMode(); else EnterXboxMode(); });
+                    else Run(() => { if (BigPictureOpen()) CloseBigPicture(); else OpenBigPicture(); });
                     break;
                 case "keyUp":
-                    ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(250); Refresh(true); Thread.Sleep(2000); Refresh(true); });
+                    ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(250); Refresh(true); });
                     break;
             }
         }
         else if ((name == "couch_bigpicture" || name == "couch_xbox") && ev == "keyDown")
         {
             bool xbox = name == "couch_xbox";
-            ThreadPool.QueueUserWorkItem(_ => Couch(context, xbox));
+            Run(() => Couch(context, xbox));
         }
         else if (name == "office" && ev == "keyDown")
         {
-            ThreadPool.QueueUserWorkItem(_ => Office(context));
+            Run(() => Office(context));
         }
+    }
+
+    // Действия ждут, пока режимы реально переключатся, поэтому идут в фоне и строго по очереди:
+    // два быстрых нажатия не перемешаются.
+    static readonly object sequence = new object();
+
+    static void Run(Action action)
+    {
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            lock (sequence)
+            {
+                try { action(); }
+                catch (Exception e) { Program.Log("Gaming: " + e); }
+            }
+            Refresh(true);
+        });
     }
 
     // ТВ включается не мгновенно: после переключения ждём, пока картинка устаканится, и только потом режим.
@@ -57,29 +75,48 @@ static class Gaming
         int switched = Displays.SwitchTo(Displays.External);
         if (switched < 0) { Program.ShowAlert(context); return; }
         if (switched > 0) Thread.Sleep(3000);
-        if (xbox) { if (!XboxModeActive()) SendKeys(VK_LWIN, VK_F11); }
-        else if (!BigPictureOpen()) Open("steam://open/bigpicture");
-        Thread.Sleep(1500);
-        Refresh(true);
+        if (xbox) EnterXboxMode(); else OpenBigPicture();
     }
 
     static void Office(string context)
     {
-        if (XboxModeActive())
-        {
-            SendKeys(VK_LWIN, VK_F11);
-            WaitFor(() => !XboxModeActive(), 5000);
-        }
-        if (BigPictureOpen())
-        {
-            Open("steam://close/bigpicture");
-            WaitFor(() => !BigPictureOpen(), 5000);
-        }
+        ExitXboxMode();
+        CloseBigPicture();
         int switched = Displays.SwitchTo(Displays.Internal);
         if (switched < 0) Program.ShowAlert(context);
         if (switched > 0) Thread.Sleep(2500);  // окна переезжают на монитор — сворачиваем уже после
         Tools.MinimizeAll();
-        Refresh(true);
+    }
+
+    static void OpenBigPicture()
+    {
+        ExitXboxMode();
+        if (!BigPictureOpen()) Open("steam://open/bigpicture");
+    }
+
+    static void CloseBigPicture()
+    {
+        if (!BigPictureOpen()) return;
+        Open("steam://close/bigpicture");
+        WaitFor(() => !BigPictureOpen(), 5000);
+        Thread.Sleep(500);
+    }
+
+    static void EnterXboxMode()
+    {
+        CloseBigPicture();
+        if (XboxModeActive()) return;
+        SendKeys(VK_LWIN, VK_F11);
+        WaitFor(XboxModeActive, 5000);
+    }
+
+    // После выхода даём рабочему столу секунду вернуться, прежде чем открывать что-то следующее.
+    static void ExitXboxMode()
+    {
+        if (!XboxModeActive()) return;
+        SendKeys(VK_LWIN, VK_F11);
+        WaitFor(() => !XboxModeActive(), 5000);
+        Thread.Sleep(1000);
     }
 
     static void WaitFor(Func<bool> done, int timeoutMs)

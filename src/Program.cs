@@ -1,6 +1,6 @@
 // MegarohasDeck — личный плагин megarohas для fifine Control Deck
 // (движок Mirabox StreamDock, протокол как у Elgato Stream Deck).
-// Здесь — WebSocket-связь с софтом деки и раздача событий по модулям (Displays, Audio, Record, Vpn, Gaming, Tools).
+// Здесь — WebSocket-связь с софтом деки и раздача событий по модулям (Displays, Audio, Record, Gaming, Tools).
 // Сборка: build.ps1 (csc из .NET Framework 4, C# 5).
 using System;
 using System.Collections.Generic;
@@ -63,7 +63,6 @@ static class Program
         if (name.StartsWith(Displays.Group)) Displays.Handle(ev, name.Substring(Displays.Group.Length), context);
         else if (name.StartsWith(Audio.Group)) Audio.Handle(ev, name.Substring(Audio.Group.Length), context);
         else if (name.StartsWith(Record.Group)) Record.Handle(ev, name.Substring(Record.Group.Length), context);
-        else if (name.StartsWith(Vpn.Group)) Vpn.Handle(ev, name.Substring(Vpn.Group.Length), context);
         else if (name.StartsWith(Gaming.Group)) Gaming.Handle(ev, name.Substring(Gaming.Group.Length), context);
         else if (name.StartsWith(Tools.Group)) Tools.Handle(ev, name.Substring(Tools.Group.Length), context);
     }
@@ -76,7 +75,6 @@ static class Program
             Displays.Refresh(false);
             Audio.Refresh(false);
             Record.Tick();
-            Vpn.Refresh(false);
             Gaming.Refresh(false);
             Tools.Refresh(false);
         }
