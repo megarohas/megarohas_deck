@@ -162,6 +162,67 @@
       "UserTitleEnabled": true,
       "Tooltip": "Start / stop recording the main screen with OBS in the background (starts OBS in the tray if needed); red with a timer while recording",
       "UUID": "com.megarohas.deck.record.toggle"
+    },
+    {
+      "Icon": "images/list_vpn",
+      "Name": "VPN (Hiddify)",
+      "States": [
+        {
+          "Image": "images/vpn_off",
+          "Name": "Off"
+        },
+        {
+          "Image": "images/vpn_on",
+          "Name": "On"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Hiddify in system proxy mode: lights up while traffic goes through the VPN; press to switch the system proxy off/on (opens Hiddify if its core is not running)",
+      "UUID": "com.megarohas.deck.vpn.toggle",
+      "DisableAutomaticStates": true
+    },
+    {
+      "Icon": "images/list_bigpicture",
+      "Name": "Steam Big Picture",
+      "States": [
+        {
+          "Image": "images/bigpicture_off",
+          "Name": "Closed"
+        },
+        {
+          "Image": "images/bigpicture_on",
+          "Name": "Open"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Open / close Steam Big Picture; lights up while it is open",
+      "UUID": "com.megarohas.deck.gaming.bigpicture",
+      "DisableAutomaticStates": true
+    },
+    {
+      "Icon": "images/list_xbox_mode",
+      "Name": "Xbox mode",
+      "States": [
+        {
+          "Image": "images/xbox_mode",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Toggle Xbox mode of Windows 11 (Win+F11)",
+      "UUID": "com.megarohas.deck.gaming.xbox_mode"
     }
   ],
   "SDKVersion": 1,
@@ -171,7 +232,7 @@
   "Category": "megarohas",
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
-  "Description": "Personal deck actions by megarohas: projection mode, volume and screen recording keys with live state",
+  "Description": "Personal deck actions by megarohas: projection mode, volume, recording, VPN and gaming mode keys with live state",
   "Version": "1.0.0",
   "URL": "https://github.com/megarohas",
   "OS": [

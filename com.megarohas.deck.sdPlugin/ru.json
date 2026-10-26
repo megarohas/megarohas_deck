@@ -1,6 +1,6 @@
 {
   "Name": "megarohas",
-  "Description": "Личные кнопки megarohas: экраны (Win+P), громкость и запись экрана, с живым состоянием",
+  "Description": "Личные кнопки megarohas: экраны (Win+P), громкость, запись, VPN и игровые режимы, с живым состоянием",
   "Category": "megarohas",
   "com.megarohas.deck.display.internal": {
     "Name": "Только монитор",
@@ -33,5 +33,17 @@
   "com.megarohas.deck.record.toggle": {
     "Name": "Запись экрана",
     "Tooltip": "Запуск / остановка записи основного экрана через OBS в фоне (сам запускает OBS в трее); пока идёт запись — красная, с таймером"
+  },
+  "com.megarohas.deck.vpn.toggle": {
+    "Name": "VPN (Hiddify)",
+    "Tooltip": "Hiddify в режиме системного прокси: горит, пока трафик идёт через VPN; нажатие выключает/включает системный прокси (если ядро Hiddify не запущено — открывает Hiddify)"
+  },
+  "com.megarohas.deck.gaming.bigpicture": {
+    "Name": "Steam Big Picture",
+    "Tooltip": "Открыть / закрыть Steam Big Picture; горит, пока он открыт"
+  },
+  "com.megarohas.deck.gaming.xbox_mode": {
+    "Name": "Режим Xbox",
+    "Tooltip": "Включить / выключить режим Xbox в Windows 11 (Win+F11)"
   }
 }

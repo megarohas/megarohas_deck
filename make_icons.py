@@ -84,6 +84,53 @@ def tile(colors):
             f'<rect width="256" height="256" rx="44" fill="url(#t)"/>')
 
 
+VPN = ("#6ee7b7", "#10b981")
+STEAM = ("#93c5fd", "#3b82f6")
+XBOX = ("#86efac", "#16a34a")
+
+PAD = ("M84 96H172C198 96 214 118 218 148C222 178 208 192 193 187C182 183 174 170 163 162H93C82 170 74 183 63 187"
+       "C48 192 34 178 38 148C42 118 58 96 84 96Z")
+
+
+def gamepad(g, s, w):
+    return (f'<path d="{PAD}" fill="{s}" stroke="{g}" stroke-width="{w}" stroke-linejoin="round"/>'
+            f'<path d="M86 122V146M74 134H98" stroke="{g}" stroke-width="{w * 0.8:g}" stroke-linecap="round"/>'
+            f'<circle cx="166" cy="124" r="{w * 0.62:g}" fill="{g}"/><circle cx="182" cy="142" r="{w * 0.62:g}" fill="{g}"/>')
+
+
+def vpn(g, s, w, on):
+    shield = "M128 38L196 64V120C196 164 166 196 128 214C90 196 60 164 60 120V64Z"
+    path = "M98 126L120 148L160 104" if on else "M106 104L150 148M150 104L106 148"
+    mark = (f'<path d="{path}" fill="none" stroke="{g}" stroke-width="{w}" stroke-linecap="round" '
+            f'stroke-linejoin="round"/>')
+    return f'<path d="{shield}" fill="{s}" stroke="{g}" stroke-width="{w}" stroke-linejoin="round"/>{mark}'
+
+
+def bigpicture(g, s, w):
+    return (f'<rect x="28" y="40" width="200" height="140" rx="14" fill="{s}" stroke="{g}" stroke-width="{w}"/>'
+            f'<path d="M72 180L62 204M184 180L194 204" stroke="{g}" stroke-width="{w}" stroke-linecap="round"/>'
+            f'<g transform="translate(128,112) scale(.62) translate(-128,-142)">{gamepad(g, "none", w * 1.45)}</g>')
+
+
+def xbox_mode(g, w):
+    corners = "M34 72V44H62M194 44H222V72M222 184V212H194M62 212H34V184"
+    return (f'<path d="{corners}" fill="none" stroke="{g}" stroke-width="{w}" stroke-linecap="round" stroke-linejoin="round"/>'
+            f'<g transform="translate(128,128) scale(.78) translate(-128,-142)">{gamepad(g, "none", w * 1.25)}</g>')
+
+
+def mode_keys():
+    """name -> svg body for the VPN / Big Picture / Xbox mode keys."""
+    black = '<rect width="256" height="256" fill="#000"/>'
+    dark = f'<rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'
+    return {
+        "vpn_off": black + dark + f'<g opacity="0.75">{vpn(VPN[0], "none", 13, False)}</g>',
+        "vpn_on": black + tile(VPN) + vpn(DARK_GLYPH, LIT_SCREEN, 13, True),
+        "bigpicture_off": black + dark + f'<g opacity="0.75">{bigpicture(STEAM[0], "none", 13)}</g>',
+        "bigpicture_on": black + tile(STEAM) + bigpicture(DARK_GLYPH, LIT_SCREEN, 13),
+        "xbox_mode": black + dark + f'<g opacity="0.85">{xbox_mode(XBOX[0], 13)}</g>',
+    }
+
+
 def audio_keys():
     """name -> svg body for the audio key images."""
     black = '<rect width="256" height="256" fill="#000"/>'
@@ -137,6 +184,12 @@ def main():
     for name, extra in (("mute", WAVES), ("volume_down", MINUS), ("volume_up", PLUS)):
         for size, suffix in ((20, ""), (40, "@2x")):
             render(speaker("#fff", "none", 18, extra), size, OUT / f"list_{name}{suffix}.png")
+    for name, body in mode_keys().items():
+        render(body, 256, OUT / f"{name}.png")
+    for name, body in (("vpn", vpn("#fff", "none", 18, True)), ("bigpicture", bigpicture("#fff", "none", 18)),
+                       ("xbox_mode", xbox_mode("#fff", 18))):
+        for size, suffix in ((20, ""), (40, "@2x")):
+            render(body, size, OUT / f"list_{name}{suffix}.png")
     render(f'<rect width="256" height="256" fill="#000"/><rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'
            f'<circle cx="128" cy="128" r="70" fill="none" stroke="#ef4444" stroke-width="13" opacity=".85"/>'
            f'<circle cx="128" cy="128" r="40" fill="#ef4444"/>', 256, OUT / "record_off.png")

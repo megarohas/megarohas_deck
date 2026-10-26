@@ -43,6 +43,21 @@ RGB-кольцо D6 программно не управляется: ни ко�
 (`S:\obs_records`), звук — как настроен в OBS. Нужен включённый obs-websocket (Инструменты → Настройки сервера
 WebSocket); пароль плагин берёт из его `config.json`. Запись, начатая в самом OBS, тоже подсвечивается.
 
+## VPN (Hiddify)
+
+![](com.megarohas.deck.sdPlugin/images/vpn_on.png) **VPN** — для Hiddify в режиме «Системный прокси». Горит, пока прокси
+Windows указывает на ядро Hiddify (`127.0.0.1:12334`) и оно отвечает, то есть трафик идёт через VPN. Снаружи Hiddify
+не управляется (нет API и CLI для запущенного приложения, deep-link `hiddify://` — только импорт профилей), поэтому
+нажатие переключает сам системный прокси: выкл — трафик напрямую, вкл — снова через Hiddify. Сам Hiddify при этом
+остаётся «подключённым». Если ядро Hiddify не запущено, нажатие открывает его окно — подключиться там.
+
+## Игровые режимы
+
+| Кнопка | Что делает |
+|---|---|
+| ![](com.megarohas.deck.sdPlugin/images/bigpicture_on.png) **Steam Big Picture** | открывает / закрывает Big Picture (`steam://open/bigpicture`); горит, пока он открыт |
+| ![](com.megarohas.deck.sdPlugin/images/xbox_mode.png) **Режим Xbox** | включает / выключает режим Xbox в Windows 11 (бывший Xbox Full Screen Experience) — это Win+F11 |
+
 ## Загрузочная картинка
 
 `bootlogo/make_bootlogo.py` рисует варианты 800×480 под сетку клавиш и превью «сквозь клавиши». Стоит
@@ -52,7 +67,7 @@ WebSocket); пароль плагин берёт из его `config.json`. За
 
 - `com.megarohas.deck.sdPlugin/` — сам плагин: `manifest.json`, `ru.json`, картинки; сюда же собирается `MegarohasDeck.exe`.
 - `src/` — исходники exe: `Program.cs` (WebSocket-протокол StreamDock), `Displays.cs` (режимы экранов), `Audio.cs` (громкость),
-  `Record.cs` (запись через obs-websocket).
+  `Record.cs` (запись через obs-websocket), `Vpn.cs` (Hiddify), `Gaming.cs` (Big Picture, режим Xbox).
 - `build.ps1` — сборка exe (csc из .NET Framework 4, ничего ставить не надо).
 - `make_icons.py` — рисует картинки кнопок (SVG → PNG через Edge в headless-режиме, только стандартная библиотека Python).
 - `install.ps1` — копирует плагин в `%APPDATA%\HotSpot\StreamDock\plugins` и перезапускает софт деки.
