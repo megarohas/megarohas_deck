@@ -160,7 +160,7 @@
       ],
       "SupportedInMultiActions": true,
       "UserTitleEnabled": true,
-      "Tooltip": "Start / stop recording the main screen with OBS in the background (starts OBS in the tray if needed); red with a timer while recording",
+      "Tooltip": "Start / stop recording the main screen with OBS in the background (starts OBS in the tray and closes it afterwards); red with a timer while recording",
       "UUID": "com.megarohas.deck.record.toggle"
     },
     {
@@ -306,7 +306,7 @@
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
   "Description": "Personal deck actions by megarohas: displays, volume, recording, gaming modes and desktop tools with live state",
-  "Version": "1.1.1",
+  "Version": "1.2.0",
   "URL": "https://github.com/megarohas/megarohas_deck",
   "OS": [
     {

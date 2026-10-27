@@ -48,11 +48,15 @@ Works with whatever output is the default right now (TV, headphones…).
 ### Recording
 
 <img src="com.megarohas.deck.sdPlugin/images/record_off.png" width="56"> **Record screen** — one tap to start recording the
-main screen with **OBS without opening its window**, even on top of Big Picture: while the key is on the deck, the
-plugin keeps OBS running minimized to the tray (the deck software starts with Windows, so OBS does too). For the
-recording OBS is switched to a `deck_record` scene and switched back afterwards. The key turns red with a running timer.
+main screen with **OBS without opening its window**, even on top of Big Picture. OBS does not sit in the background:
+the tap starts it minimized to the tray, straight on a `deck_record` scene that only captures the main screen, and the
+second tap stops the recording and closes OBS again. An OBS you opened yourself is just used — it records on
+`deck_record`, goes back to your scene and stays open. The key turns red with a running timer.
 Needs OBS 28+ with the built-in WebSocket server enabled (*Tools → WebSocket Server Settings*); the plugin reads the
 password from OBS's own config, nothing to type.
+
+**Keep the webcam off:** tick *Deactivate when not showing* in the properties of your camera sources in OBS. Then the
+camera only turns on in scenes that show it — never during a deck recording.
 
 ### Gaming modes
 
@@ -97,10 +101,10 @@ software (293V3, N3, N4, Ajazz AKP153…) should work too — the keys use the s
   9 modes, long press — off/on.
 - **Xbox button opens both Game Bar and the Big Picture menu?** Turn off *Settings → Gaming → Game Bar → Allow your
   controller to open Game Bar* (in Settings — writing `UseNexusForGameBarEnabled` to the registry is ignored).
-- **OBS 32 "did not shut down properly / safe mode" prompt.** OBS 32 removed `--disable-shutdown-check`, and shutting
-  Windows down with OBS in the tray leaves `run_*` marks in `%APPDATA%\obs-studio\.sentinel` — the next start then
-  waits silently on a safe-mode dialog. The plugin deletes those leftovers (only while OBS is not running) before it
-  starts OBS, so the tray start never gets stuck.
+- **OBS 32 "did not shut down properly / safe mode" prompt.** OBS 32 removed `--disable-shutdown-check`, and an OBS
+  that did not close cleanly (Windows shut down with it running, a crash) leaves `run_*` marks in
+  `%APPDATA%\obs-studio\.sentinel` — the next start then waits silently on a safe-mode dialog. The plugin deletes those
+  leftovers (only while OBS is not running) before it starts OBS, so the start never gets stuck.
 - **The deck software kills its plugins' children.** fifine Control Deck runs itself and every plugin inside a Windows
   job object, so anything a plugin starts directly dies (uncleanly) whenever the software restarts. The plugin starts OBS
   through WMI (`Win32_Process.Create`) instead, which puts it outside the job; starting it via `explorer.exe` from inside
@@ -177,11 +181,15 @@ every incoming message to `MegarohasDeck.log`.
 ### Запись
 
 <img src="com.megarohas.deck.sdPlugin/images/record_off.png" width="56"> **Запись экрана** — одно нажатие, и основной экран
-пишется через **OBS, не открывая его окно**, даже поверх Big Picture: пока кнопка есть на деке, плагин держит OBS
-запущенным в трее (софт деки стартует с Windows — значит, и OBS). На время записи OBS переключается на сцену
-`deck_record`, потом возвращается на прежнюю. Кнопка красная, на ней тикает время.
+пишется через **OBS, не открывая его окно**, даже поверх Big Picture. В фоне OBS не висит: нажатие запускает его
+свёрнутым в трей сразу на сцене `deck_record` (только захват основного экрана), повторное — останавливает запись и
+закрывает OBS. Открытый вручную OBS плагин просто использует: пишет на `deck_record`, возвращает твою сцену и не
+закрывает. Кнопка красная, на ней тикает время.
 Нужен OBS 28+ с включённым встроенным WebSocket-сервером (*Инструменты → Настройки сервера WebSocket*); пароль плагин
 берёт из конфига самого OBS, вводить ничего не надо.
+
+**Чтобы вебкамера не включалась:** в OBS в свойствах источников камеры поставь галку *Отключать, когда не
+отображается*. Тогда камера включается только на сценах, где она есть, и никогда — во время записи с деки.
 
 ### Игровые режимы
 
@@ -227,9 +235,9 @@ fifine Control Deck / StreamDock.
 - **Кнопка Xbox открывает и Game Bar, и меню Big Picture?** Выключи *Настройки → Игры → Game Bar → Разрешить контроллеру
   открывать Game Bar* (именно в настройках — запись `UseNexusForGameBarEnabled` в реестр не действует).
 - **OBS 32 и окно «OBS неправильно завершил работу / безопасный режим».** В OBS 32 убрали `--disable-shutdown-check`,
-  а выключение Windows с OBS в трее оставляет отметки `run_*` в `%APPDATA%\obs-studio\.sentinel` — следующий запуск
-  молча висит на окне безопасного режима. Плагин удаляет эти остатки (только пока OBS не запущен) перед запуском OBS,
-  поэтому старт в трей не зависает.
+  а OBS, закрытый не штатно (выключили Windows, пока он работал, или он упал), оставляет отметки `run_*` в
+  `%APPDATA%\obs-studio\.sentinel` — следующий запуск молча висит на окне безопасного режима. Плагин удаляет эти
+  остатки (только пока OBS не запущен) перед запуском OBS, поэтому старт не зависает.
 - **Софт деки убивает потомков своих плагинов.** fifine Control Deck держит себя и все плагины в Windows Job, поэтому
   всё, что плагин запустил напрямую, умирает (аварийно) при каждом перезапуске софта. Плагин запускает OBS через WMI
   (`Win32_Process.Create`) — так он оказывается вне Job; через `explorer.exe` изнутри Job это не работает.

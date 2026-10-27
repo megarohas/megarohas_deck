@@ -1,8 +1,8 @@
-// Кнопка «Запись»: запись экрана через OBS, не открывая его окно.
-// Пока кнопка есть на деке, OBS держится запущенным в трее (дека стартует с Windows — значит, и OBS), чтобы запись
-// начиналась сразу, в том числе поверх Big Picture. Нажатие: ставим сцену deck_record с захватом основного экрана
-// (того, что сейчас на 0,0 — монитор или ТВ) и начинаем запись. Повторное нажатие — стоп, и OBS возвращается на
-// прежнюю сцену. Пока идёт запись, клавиша красная и на ней тикает время.
+// Кнопка «Запись»: запись экрана через OBS, не открывая его окно. OBS в фоне не висит: нажатие запускает его
+// (свёрнутым в трей, сразу на сцене deck_record с захватом основного экрана — того, что сейчас на 0,0, монитор или
+// ТВ), и запись начинается. Повторное нажатие — стоп, и запущенный плагином OBS закрывается (если его окно так и не
+// открыли). Открытый вручную OBS плагин только использует: пишет на deck_record и возвращает прежнюю сцену.
+// Пока идёт запись, клавиша красная и на ней тикает время.
 // Связь — obs-websocket v5 (встроен в OBS 28+), пароль берётся из его config.json.
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Management;
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -33,8 +34,10 @@ static class Record
     static Status status = Status.Idle;
     static DateTime started;
     static string previousScene;  // сцена, на которую вернуть OBS после записи
+    static bool finishing;        // запись кончилась, OBS закрывается / возвращается на прежнюю сцену
     static Obs obs;
     static int connecting;
+    static readonly object connectLock = new object();
 
     public static void Handle(string ev, string name, string context)
     {
@@ -44,7 +47,6 @@ static class Record
             case "willAppear":
                 lock (sync) keys.Add(context);
                 Show();
-                Warm();
                 break;
             case "willDisappear":
                 lock (sync) keys.Remove(context);
@@ -54,12 +56,13 @@ static class Record
                 lock (sync)
                 {
                     now = status;
-                    if (now == Status.Busy) return;
+                    if (now == Status.Busy || finishing) return;
                     status = Status.Busy;
                 }
                 Show();
                 ThreadPool.QueueUserWorkItem(_ =>
                 {
+                    bool failed = false, finish;
                     try
                     {
                         if (now == Status.Recording) obs.Call("StopRecord"); else Start();
@@ -68,10 +71,18 @@ static class Record
                     catch (Exception e)
                     {
                         Program.Log("Record: " + e.Message);
-                        lock (sync) status = now;
-                        Show();
-                        lock (sync) foreach (var key in keys) Program.ShowAlert(key);
+                        failed = true;
                     }
+                    lock (sync)
+                    {
+                        if (failed) status = now;
+                        // запись так и не началась — не оставляем зря запущенный OBS
+                        finish = now != Status.Recording && status == Status.Idle && !finishing;
+                        if (finish) finishing = true;
+                    }
+                    Show();
+                    if (failed) lock (sync) foreach (var key in keys) Program.ShowAlert(key);
+                    if (finish) Finish();
                 });
                 break;
         }
@@ -85,7 +96,11 @@ static class Record
     // Раз в секунду: время на клавише и подхват OBS, запущенного вручную (если запись идёт из самого OBS).
     public static void Tick()
     {
-        lock (sync) if (status == Status.Recording && keys.Count > 0) Show();
+        lock (sync)
+        {
+            if (status == Status.Recording && keys.Count > 0) Show();
+            if (status == Status.Busy || finishing) return;  // OBS сейчас запускает или закрывает сама кнопка
+        }
         if (Connected()) return;
         int pid = ObsPid();
         if (pid == 0 || pid == deadPid || (DateTime.Now - lastAttempt).TotalSeconds < 5) return;
@@ -99,19 +114,8 @@ static class Record
         });
     }
 
-    // Один раз за запуск плагина: если OBS не запущен, поднимаем его в трей. Если потом закрыть OBS руками,
-    // плагин не воскрешает его до следующего старта софта деки (или до нажатия записи).
-    static int warmed;
-
-    static void Warm()
-    {
-        if (Interlocked.Exchange(ref warmed, 1) == 1) return;
-        ThreadPool.QueueUserWorkItem(_ =>
-        {
-            try { if (ObsPid() == 0) LaunchObs(); }
-            catch (Exception e) { Program.Log("Record: warm-up: " + e.Message); }
-        });
-    }
+    // PID OBS, который запустил сам плагин (0 — такого нет): его закрываем после записи.
+    static int launchedPid;
 
     static int ObsPid()
     {
@@ -127,33 +131,199 @@ static class Record
     // Сам OBS создаём через WMI (Win32_Process.Create): софт деки держит себя и плагины в Windows Job и при
     // перезапуске убивает всех потомков — запущенный напрямую OBS погибал бы вместе с ним (и снова «аварийно»).
     // Процесс от WMI порождает служба WmiPrvSE, в Job он не попадает. (Через explorer.exe из Job не выходит.)
-    static void LaunchObs()
+    // startScene — сцена, с которой OBS стартует (--scene): сразу deck_record, чтобы при запуске не ожила камера
+    // из сцены, на которой OBS закрывали в прошлый раз.
+    static int LaunchObs(string startScene)
     {
-        string sentinel = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "obs-studio", ".sentinel");
+        string sentinel = Path.Combine(AppData, "obs-studio", ".sentinel");
         if (Directory.Exists(sentinel))
             foreach (var file in Directory.GetFiles(sentinel, "run_*"))
                 try { File.Delete(file); }
                 catch (Exception e) { Program.Log("Record: sentinel: " + e.Message); }
         string exe = Path.Combine(ObsDir, "obs64.exe"), args = "--minimize-to-tray --disable-updater";
+        if (startScene != null) args += " --scene \"" + startScene + "\"";
         try
         {
             using (var processClass = new ManagementClass("Win32_Process"))
             {
-                object result = processClass.InvokeMethod("Create", new object[] { "\"" + exe + "\" " + args, ObsDir, null, null });
+                var call = new object[] { "\"" + exe + "\" " + args, ObsDir, null, null };
+                object result = processClass.InvokeMethod("Create", call);
                 if (Convert.ToUInt32(result) != 0) throw new Exception("Win32_Process.Create returned " + result);
+                return Convert.ToInt32(call[3]);  // out ProcessId
             }
         }
         catch (Exception e)
         {
             Program.Log("Record: start via WMI: " + e.Message);
-            Process.Start(new ProcessStartInfo(exe, args) { WorkingDirectory = ObsDir, UseShellExecute = false });
+            using (var p = Process.Start(new ProcessStartInfo(exe, args) { WorkingDirectory = ObsDir, UseShellExecute = false }))
+                return p.Id;
         }
     }
+
+    static readonly string AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+    // Файл текущей коллекции сцен: OBS 31+ хранит выбор в user.ini (имя с .json), прежние — в global.ini (без).
+    static string CollectionFile()
+    {
+        string dir = Path.Combine(AppData, "obs-studio");
+        foreach (var ini in new[] { "user.ini", "global.ini" })
+        {
+            string path = Path.Combine(dir, ini);
+            if (!File.Exists(path)) continue;
+            var m = Regex.Match(File.ReadAllText(path), @"^SceneCollectionFile=(.+?)\s*$", RegexOptions.Multiline);
+            if (!m.Success) continue;
+            string name = m.Groups[1].Value;
+            return Path.Combine(dir, "basic", "scenes", name.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ? name : name + ".json");
+        }
+        throw new Exception("no SceneCollectionFile in OBS config");
+    }
+
+    // Текущая сцена из сохранённой коллекции OBS (пока он закрыт) и есть ли в ней deck_record.
+    static string SavedScene(out bool hasDeckScene)
+    {
+        hasDeckScene = false;
+        try
+        {
+            var collection = new JavaScriptSerializer { MaxJsonLength = int.MaxValue }
+                .Deserialize<Dictionary<string, object>>(File.ReadAllText(CollectionFile()));
+            object order;
+            if (collection.TryGetValue("scene_order", out order))
+                foreach (Dictionary<string, object> s in (System.Collections.IEnumerable)order)
+                    if (Str(s, "name") == Scene) hasDeckScene = true;
+            return Str(collection, "current_program_scene") ?? Str(collection, "current_scene");
+        }
+        catch (Exception e)
+        {
+            Program.Log("Record: saved scene: " + e.Message);
+            return null;
+        }
+    }
+
+    // Запись кончилась или так и не началась (finishing уже выставлен под sync). OBS, запущенный плагином, закрываем,
+    // а прежнюю сцену возвращаем в его файле коллекции: переключи мы её в самом OBS, на ней могла бы ожить
+    // вебкамера. Открытый вручную OBS просто возвращаем на прежнюю сцену.
+    static void Finish()
+    {
+        string restore;
+        lock (sync) { restore = previousScene; previousScene = null; }
+        Show();
+        try
+        {
+            if (CloseLaunchedObs()) { if (restore != null) PutBackScene(restore); }
+            else if (restore != null && Connected())
+                try { obs.Call("SetCurrentProgramScene", new { sceneName = restore }); }
+                catch (Exception e) { Program.Log("Record: restore scene: " + e.Message); }
+        }
+        finally
+        {
+            lock (sync) finishing = false;
+            Show();
+        }
+    }
+
+    // Закрыть OBS, запущенный плагином, — штатно (WM_CLOSE главному окну, как «Выход» в меню трея). Если окно OBS
+    // открыли — им пользуются, не закрываем. true — OBS закрылся.
+    static bool CloseLaunchedObs()
+    {
+        int pid = Interlocked.Exchange(ref launchedPid, 0);
+        if (pid == 0) return false;
+        try
+        {
+            using (var p = Process.GetProcessById(pid))
+            {
+                IntPtr window = IntPtr.Zero;
+                for (int i = 0; i < 20 && !p.HasExited; i++)  // сразу после запуска окна ещё может не быть
+                {
+                    window = MainWindow(pid);
+                    if (window != IntPtr.Zero) break;
+                    Thread.Sleep(500);
+                }
+                if (p.HasExited) return true;
+                if (window == IntPtr.Zero)
+                {
+                    Program.Log("Record: no OBS window, killing it");
+                    p.Kill();
+                }
+                else if (IsWindowVisible(window)) return false;
+                else PostMessage(window, 0x0010 /* WM_CLOSE */, IntPtr.Zero, IntPtr.Zero);
+                if (p.WaitForExit(20000)) return true;
+                Program.Log("Record: OBS did not close in 20 s");
+                return false;
+            }
+        }
+        catch (ArgumentException) { return true; }  // уже закрыт
+        catch (Exception e)
+        {
+            Program.Log("Record: close OBS: " + e.Message);
+            return false;
+        }
+    }
+
+    // Главное окно OBS — верхнее окно процесса с заголовком «OBS <версия> - …» (в трее оно просто скрыто).
+    static IntPtr MainWindow(int pid)
+    {
+        IntPtr window = IntPtr.Zero;
+        EnumWindows((hwnd, _) =>
+        {
+            uint owner;
+            GetWindowThreadProcessId(hwnd, out owner);
+            if (owner != pid) return true;
+            var title = new StringBuilder(256);
+            GetWindowText(hwnd, title, title.Capacity);
+            if (!title.ToString().StartsWith("OBS ")) return true;
+            window = hwnd;
+            return false;
+        }, IntPtr.Zero);
+        return window;
+    }
+
+    // OBS, закрытый на deck_record, запомнил её в файле коллекции — ставим там прежнюю сцену, чтобы OBS, открытый
+    // потом вручную, был на своей сцене. Правим только эти два значения и только пока OBS не запущен.
+    static void PutBackScene(string scene)
+    {
+        try
+        {
+            string file = CollectionFile();
+            byte[] raw = File.ReadAllBytes(file);
+            bool bom = raw.Length >= 3 && raw[0] == 0xEF && raw[1] == 0xBB && raw[2] == 0xBF;
+            string text = new UTF8Encoding(false).GetString(raw, bom ? 3 : 0, raw.Length - (bom ? 3 : 0));
+            string value = new JavaScriptSerializer().Serialize(scene);
+            string patched = Regex.Replace(text, "(\"current_(?:program_)?scene\":\\s*)\"" + Scene + "\"",
+                m => m.Groups[1].Value + value);
+            if (patched == text || ObsPid() != 0) return;
+            string temp = file + ".deck";
+            File.WriteAllText(temp, patched, new UTF8Encoding(bom));
+            File.Replace(temp, file, null);
+        }
+        catch (Exception e) { Program.Log("Record: put back scene: " + e.Message); }
+    }
+
+    // OBS, запущенный плагином (только он стартует с --disable-updater), — на случай, если софт деки
+    // перезапускался, пока OBS работал.
+    static bool LaunchedByDeck(int pid)
+    {
+        try
+        {
+            using (var search = new ManagementObjectSearcher("SELECT CommandLine FROM Win32_Process WHERE ProcessId = " + pid))
+                foreach (ManagementObject p in search.Get())
+                    using (p) return ((p["CommandLine"] as string) ?? "").Contains("--disable-updater");
+        }
+        catch (Exception e) { Program.Log("Record: OBS command line: " + e.Message); }
+        return false;
+    }
+
+    delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr param);
+    [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc callback, IntPtr param);
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int max);
+    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
 
     // Нажатие на запись, а связи с OBS нет: если OBS не запущен — запускаем; если он как раз закрывается —
     // ждём, пока закроется, и запускаем заново; потом подключаемся.
     static void Start()
     {
+        string savedScene = null;  // сцена, на которой OBS закрывали, — вернём её после записи
         if (!Connected())
         {
             var deadline = DateTime.Now.AddSeconds(60);
@@ -164,7 +334,10 @@ static class Record
                 if (pid == 0)
                 {
                     if (launches++ == 2) throw new Exception("OBS does not start");
-                    LaunchObs();
+                    bool hasDeckScene;
+                    savedScene = SavedScene(out hasDeckScene);
+                    launchedPid = LaunchObs(hasDeckScene ? Scene : null);
+                    deadPid = 0;  // прежний OBS уже закрылся, а номер процесса Windows может выдать снова
                     Thread.Sleep(2000);
                 }
                 else if (pid != deadPid)
@@ -185,6 +358,8 @@ static class Record
             obs.Call("SetCurrentProgramScene", new { sceneName = Scene });
             lock (sync) previousScene = current;
         }
+        else if (savedScene != null && savedScene != Scene)
+            lock (sync) previousScene = savedScene;  // OBS стартовал сразу на deck_record
         obs.Call("StartRecord");
     }
 
@@ -253,57 +428,80 @@ static class Record
 
     static void Connect()
     {
-        int pid = ObsPid();
-        var o = new Obs();
-        o.RecordStateChanged = OnRecordState;
-        o.Closed = () =>
+        lock (connectLock)
         {
-            if (o.Identified) deadPid = pid;
-            lock (sync) if (status != Status.Idle) status = Status.Idle;
-            Show();
-        };
-        try { o.Connect(ReadPassword()); }
-        catch
-        {
-            o.Dispose();  // недоделанное соединение тоже держит OBS при закрытии
-            throw;
-        }
-        obs = o;
-        var record = o.Call("GetRecordStatus");
-        lock (sync)
-        {
-            if (Bool(record, "outputActive"))
+            if (Connected()) return;
+            int pid = ObsPid();
+            var o = new Obs();
+            o.RecordStateChanged = OnRecordState;
+            o.Closed = () =>
             {
-                status = Status.Recording;
-                started = DateTime.Now.AddMilliseconds(-Convert.ToDouble(record["outputDuration"]));
+                if (obs != o) return;  // соединение, которое так и не прижилось
+                if (o.Identified) deadPid = pid;
+                lock (sync) if (status != Status.Idle) status = Status.Idle;
+                Show();
+            };
+            Dictionary<string, object> record;
+            try
+            {
+                o.Connect(ReadPassword());
+                record = WhenReady(o);
             }
-            else if (status == Status.Recording) status = Status.Idle;
+            catch
+            {
+                o.Dispose();  // недоделанное соединение тоже держит OBS при закрытии
+                throw;
+            }
+            obs = o;
+            bool ours = launchedPid == pid || (launchedPid == 0 && LaunchedByDeck(pid)), leftover = false;
+            if (ours) launchedPid = pid;
+            lock (sync)
+            {
+                if (Bool(record, "outputActive"))
+                {
+                    status = Status.Recording;
+                    started = DateTime.Now.AddMilliseconds(-Convert.ToDouble(record["outputDuration"]));
+                }
+                else if (status == Status.Recording) status = Status.Idle;
+                // OBS от плагина, который ничего не пишет (софт деки перезапускался), — закрываем, в фоне ему не место
+                leftover = ours && status == Status.Idle && !finishing;
+                if (leftover) finishing = true;
+            }
+            Show();
+            if (leftover) ThreadPool.QueueUserWorkItem(_ => Finish());
         }
-        Show();
+    }
+
+    // Websocket у OBS поднимается раньше, чем догружаются сцены, и до тех пор запросы отвечают 207 (NotReady).
+    static Dictionary<string, object> WhenReady(Obs o)
+    {
+        var deadline = DateTime.Now.AddSeconds(30);
+        while (true)
+            try { return o.Call("GetRecordStatus"); }
+            catch (ObsError e)
+            {
+                if (e.Code != 207 || DateTime.Now > deadline) throw;
+                Thread.Sleep(250);
+            }
     }
 
     static void OnRecordState(Dictionary<string, object> data)
     {
         string state = Str(data, "outputState");
-        string restore = null;
+        bool finish = false;
         lock (sync)
         {
             if (state == "OBS_WEBSOCKET_OUTPUT_STARTED") { status = Status.Recording; started = DateTime.Now; }
             else if (state == "OBS_WEBSOCKET_OUTPUT_STOPPED")
             {
                 status = Status.Idle;
-                restore = previousScene;
-                previousScene = null;
+                finish = !finishing;  // файл уже дописан — можно закрывать OBS
+                finishing = true;
             }
             else status = Status.Busy;
         }
         Show();
-        if (restore != null)
-            ThreadPool.QueueUserWorkItem(_ =>
-            {
-                try { obs.Call("SetCurrentProgramScene", new { sceneName = restore }); }
-                catch (Exception e) { Program.Log("Record: restore scene: " + e.Message); }
-            });
+        if (finish) ThreadPool.QueueUserWorkItem(_ => Finish());
     }
 
     static string ReadPassword()
@@ -320,7 +518,7 @@ static class Record
         lock (sync)
         {
             if (keys.Count == 0) return;
-            image = KeyImage(status, DateTime.Now - started);
+            image = KeyImage(finishing ? Status.Busy : status, DateTime.Now - started);
             foreach (var key in keys) Program.SetImage(key, image);
         }
     }
@@ -382,6 +580,13 @@ static class Record
         return d != null && d.TryGetValue(key, out v) && v is bool && (bool)v;
     }
 
+    // Отказ на запрос obs-websocket; Code — код из requestStatus.
+    class ObsError : Exception
+    {
+        public readonly int Code;
+        public ObsError(string message, int code) : base(message) { Code = code; }
+    }
+
     // Минимальный клиент obs-websocket v5: авторизация, запросы с ожиданием ответа, событие RecordStateChanged.
     class Obs
     {
@@ -433,7 +638,8 @@ static class Record
             var response = TryCall(type, data);
             var status = (Dictionary<string, object>)response["requestStatus"];
             if (!(bool)status["result"])
-                throw new Exception("obs-websocket: " + type + " failed: " + status["code"] + " " + Str(status, "comment"));
+                throw new ObsError("obs-websocket: " + type + " failed: " + status["code"] + " " + Str(status, "comment"),
+                    Convert.ToInt32(status["code"]));
             object payload;
             return response.TryGetValue("responseData", out payload) ? payload as Dictionary<string, object> : null;
         }
