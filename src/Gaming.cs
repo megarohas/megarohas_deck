@@ -1,6 +1,6 @@
 // Игровые режимы: Steam Big Picture, режим Xbox в Windows 11 (бывший Xbox Full Screen Experience, переключается
 // сочетанием Win+F11) и полноэкранный Playnite. Кнопки горят, пока режим открыт. Вместе режимы не работают:
-// включение одного сначала выключает остальные.
+// включение одного сначала выключает остальные, а перед открытием режима экран расчищается (ClearScreen).
 // «Диван»: сначала картинка только на ТВ, потом нужный режим.
 // «Офис»: обратно за стол — выйти из всех режимов (сами Steam, Xbox и Playnite остаются запущенными),
 // картинка только на монитор, свернуть все окна.
@@ -100,7 +100,9 @@ static class Gaming
     {
         ExitXboxMode();
         ClosePlaynite();
-        if (!BigPictureOpen()) Open("steam://open/bigpicture");
+        if (BigPictureOpen()) return;
+        ClearScreen();
+        Open("steam://open/bigpicture");
     }
 
     static void CloseBigPicture()
@@ -116,6 +118,7 @@ static class Gaming
         CloseBigPicture();
         ClosePlaynite();
         if (XboxModeActive()) return;
+        ClearScreen();
         SendKeys(VK_LWIN, VK_F11);
         WaitFor(XboxModeActive, 5000);
     }
@@ -135,7 +138,11 @@ static class Gaming
     {
         ExitXboxMode();
         CloseBigPicture();
-        if (!PlayniteOpen()) Program.Launch(Path.Combine(PlayniteDir, "Playnite.FullscreenApp.exe"), "--startfullscreen", PlayniteDir);
+        if (!PlayniteOpen())
+        {
+            ClearScreen();
+            Program.Launch(Path.Combine(PlayniteDir, "Playnite.FullscreenApp.exe"), "--startfullscreen", PlayniteDir);
+        }
         WaitFor(() => PlayniteWindow() != IntPtr.Zero, 20000);
         IntPtr window = PlayniteWindow();
         if (window != IntPtr.Zero) SwitchToThisWindow(window, true);
@@ -151,6 +158,32 @@ static class Gaming
         Program.Launch(exe, "--shutdown", PlayniteDir);
         WaitFor(() => !PlayniteOpen(), 30000);
         Program.Launch(exe, "--hidesplashscreen --nolibupdate", PlayniteDir);
+    }
+
+    // Перед полноэкранным режимом убираем всё с экрана: сворачиваем окна, как кнопка «Рабочий стол», и закрываем меню Пуск
+    // (MinimizeAll его не трогает). Иначе всё это остаётся поверх режима и держит фокус.
+    static void ClearScreen()
+    {
+        if (StartMenuOpen())
+        {
+            SendKeys(VK_ESCAPE);
+            WaitFor(() => !StartMenuOpen(), 1000);
+        }
+        Tools.MinimizeAll();
+        Thread.Sleep(200);
+    }
+
+    // Меню Пуск и поиск в Windows 11 — окна служб SearchHost и StartMenuExperienceHost.
+    static bool StartMenuOpen()
+    {
+        uint pid;
+        GetWindowThreadProcessId(GetForegroundWindow(), out pid);
+        try
+        {
+            using (var p = Process.GetProcessById((int)pid))
+                return p.ProcessName == "SearchHost" || p.ProcessName == "StartMenuExperienceHost";
+        }
+        catch (ArgumentException) { return false; }
     }
 
     static void WaitFor(Func<bool> done, int timeoutMs)
@@ -233,7 +266,7 @@ static class Gaming
         return found;
     }
 
-    const ushort VK_LWIN = 0x5B, VK_F11 = 0x7A;
+    const ushort VK_ESCAPE = 0x1B, VK_LWIN = 0x5B, VK_F11 = 0x7A;
     const uint KEYEVENTF_EXTENDEDKEY = 0x1, KEYEVENTF_KEYUP = 0x2;
 
     // Нажать сочетание: клавиши вниз по порядку, вверх в обратном.
@@ -274,6 +307,8 @@ static class Gaming
     [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc callback, IntPtr param);
     [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
     [DllImport("user32.dll")] static extern void SwitchToThisWindow(IntPtr hwnd, bool altTab);
+    [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int max);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr hwnd, StringBuilder name, int max);
 }

@@ -124,5 +124,6 @@ static class Tools
         });
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
+        thread.Join(2000);
     }
 }

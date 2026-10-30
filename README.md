@@ -73,7 +73,8 @@ camera only turns on in scenes that show it — never during a deck recording.
 Big Picture, Xbox mode and fullscreen Playnite never run together: turning one on first turns the others off. Xbox mode
 is detected with the official `IsGamingFullScreenExperienceActive()` API. Playnite is expected in its default folder
 `%LOCALAPPDATA%\Playnite`; after its fullscreen mode closes, the plugin starts it again the way Windows autostart does, so
-with *Start minimized* turned on it stays out of the way.
+with *Start minimized* turned on it stays out of the way. Before a mode opens, the plugin closes the Start menu and
+minimizes all windows, so nothing stays on top of it or keeps the focus.
 
 ### Windows
 
@@ -210,7 +211,8 @@ every incoming message to `MegarohasDeck.log`.
 Big Picture, режим Xbox и полноэкранный Playnite никогда не работают вместе: включение одного сначала выключает
 остальные. Режим Xbox определяется официальной функцией `IsGamingFullScreenExperienceActive()`. Playnite ожидается в
 стандартной папке `%LOCALAPPDATA%\Playnite`; после закрытия полноэкранного режима плагин запускает его заново, как
-автозапуск Windows, и с настройкой запуска в свёрнутом виде он не мешает.
+автозапуск Windows, и с настройкой запуска в свёрнутом виде он не мешает. Перед открытием режима плагин закрывает меню
+Пуск и сворачивает все окна, чтобы поверх него ничего не оставалось и фокус не уходил.
 
 ### Windows
 
