@@ -40,8 +40,8 @@ The key of the current mode is lit and follows changes made with Win+P. If a swi
 | Key | What it does |
 |---|---|
 | <img src="com.megarohas.deck.sdPlugin/images/mute_on.png" width="56"> **Mute** | mute / unmute; turns red while muted |
-| <img src="com.megarohas.deck.sdPlugin/images/volume_down.png" width="56"> **Volume down** | −2 %, hold to keep going; the bar shows the level |
-| <img src="com.megarohas.deck.sdPlugin/images/volume_up.png" width="56"> **Volume up** | +2 %, hold to keep going |
+| <img src="com.megarohas.deck.sdPlugin/images/volume_down.png" width="56"> **Volume down** | one step per press, like the volume key on a keyboard, with the Windows volume flyout; the bar shows the level |
+| <img src="com.megarohas.deck.sdPlugin/images/volume_up.png" width="56"> **Volume up** | the same, one step up |
 
 Works with whatever output is the default right now (TV, headphones…).
 
@@ -129,7 +129,7 @@ every incoming message to `MegarohasDeck.log`.
 |---|---|
 | `src/Program.cs` | StreamDock WebSocket protocol, dispatch to modules |
 | `src/Displays.cs` | screen modes (`SetDisplayConfig` / `QueryDisplayConfig`) |
-| `src/Audio.cs` | volume via Core Audio, live level bar |
+| `src/Audio.cs` | volume through the shell's media-key commands (`WM_APPCOMMAND`), live level bar via Core Audio |
 | `src/Record.cs` | OBS via obs-websocket v5 |
 | `src/Gaming.cs` | Big Picture, Xbox mode, Couch, Office |
 | `src/Tools.cs` | Desktop, Stay awake |
@@ -173,8 +173,8 @@ every incoming message to `MegarohasDeck.log`.
 | Кнопка | Что делает |
 |---|---|
 | <img src="com.megarohas.deck.sdPlugin/images/mute_on.png" width="56"> **Без звука** | выключить / включить звук; красная, пока звук выключен |
-| <img src="com.megarohas.deck.sdPlugin/images/volume_down.png" width="56"> **Тише** | −2 %, удержание — непрерывно; полоска показывает уровень |
-| <img src="com.megarohas.deck.sdPlugin/images/volume_up.png" width="56"> **Громче** | +2 %, удержание — непрерывно |
+| <img src="com.megarohas.deck.sdPlugin/images/volume_down.png" width="56"> **Тише** | один шаг на нажатие, как клавиша громкости на клавиатуре, с плашкой громкости Windows; полоска показывает уровень |
+| <img src="com.megarohas.deck.sdPlugin/images/volume_up.png" width="56"> **Громче** | то же, шаг вверх |
 
 Работают с устройством вывода по умолчанию (ТВ, наушники…).
 

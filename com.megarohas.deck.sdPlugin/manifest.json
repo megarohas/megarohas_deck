@@ -125,7 +125,7 @@
       "DisableAutomaticStates": true,
       "SupportedInMultiActions": true,
       "UserTitleEnabled": true,
-      "Tooltip": "Lower the volume (hold to keep going); the bar shows the level",
+      "Tooltip": "Lower the volume one step, like the volume key on a keyboard (with the Windows volume flyout); the bar shows the level",
       "UUID": "com.megarohas.deck.audio.volume_down"
     },
     {
@@ -143,7 +143,7 @@
       "DisableAutomaticStates": true,
       "SupportedInMultiActions": true,
       "UserTitleEnabled": true,
-      "Tooltip": "Raise the volume (hold to keep going); the bar shows the level",
+      "Tooltip": "Raise the volume one step, like the volume key on a keyboard (with the Windows volume flyout); the bar shows the level",
       "UUID": "com.megarohas.deck.audio.volume_up"
     },
     {
@@ -306,7 +306,7 @@
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
   "Description": "Personal deck actions by megarohas: displays, volume, recording, gaming modes and desktop tools with live state",
-  "Version": "1.2.0",
+  "Version": "1.2.1",
   "URL": "https://github.com/megarohas/megarohas_deck",
   "OS": [
     {

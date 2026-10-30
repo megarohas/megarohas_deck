@@ -1,5 +1,5 @@
 // Громкость системного устройства вывода по умолчанию: «без звука» (горит красным, когда звук выключен),
-// «тише» / «громче» с полоской уровня на клавише. Удержание ± меняет громкость непрерывно.
+// «тише» / «громче» с полоской уровня на клавише. Работают как медиаклавиши клавиатуры: нажатие — шаг и плашка Windows.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -13,8 +13,8 @@ static class Audio
 {
     public const string Group = "audio.";
 
-    const float Step = 0.02f;  // как у клавиш громкости Windows
-    const int HoldDelay = 400, HoldRepeat = 80;
+    const int WM_APPCOMMAND = 0x319;
+    const int APPCOMMAND_VOLUME_MUTE = 8, APPCOMMAND_VOLUME_DOWN = 9, APPCOMMAND_VOLUME_UP = 10;
     // Полоска уровня — та же, что дорожка в make_icons.py (BAR).
     static readonly Rectangle Bar = new Rectangle(58, 198, 140, 16);
     static readonly Color BarFill = ColorTranslator.FromHtml("#67e8f9");
@@ -24,7 +24,6 @@ static class Audio
     static readonly Dictionary<string, string> keys = new Dictionary<string, string>();
     static int shownLevel = -1;
     static bool shownMuted;
-    static volatile string held;  // context зажатой ± клавиши
 
     public static void Handle(string ev, string name, string context)
     {
@@ -39,43 +38,19 @@ static class Audio
                 lock (keys) keys.Remove(context);
                 break;
             case "keyDown":
-                if (name == "mute") WithVolume(v => { bool m; v.GetMute(out m); v.SetMute(!m, Guid.Empty); });
-                else StartHold(context, name == "volume_up" ? Step : -Step);
-                Refresh(true);
-                break;
-            case "keyUp":
-                held = null;
-                ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(250); Refresh(true); });
+                Press(name == "mute" ? APPCOMMAND_VOLUME_MUTE : name == "volume_up" ? APPCOMMAND_VOLUME_UP : APPCOMMAND_VOLUME_DOWN);
+                ThreadPool.QueueUserWorkItem(_ => { Thread.Sleep(100); Refresh(true); });
                 break;
         }
     }
 
-    static void StartHold(string context, float delta)
+    // Та же команда, что у медиаклавиш клавиатуры: шаг считает сама Windows и показывает свою плашку.
+    // Шлём сразу оболочке, а не клавишей: игру в фокусе это не задевает, и она не может проглотить нажатие.
+    static void Press(int command)
     {
-        Change(delta);
-        held = context;
-        ThreadPool.QueueUserWorkItem(_ =>
-        {
-            Thread.Sleep(HoldDelay);
-            while (held == context)
-            {
-                Change(delta);
-                Refresh(false);
-                Thread.Sleep(HoldRepeat);
-            }
-        });
-    }
-
-    // Как и клавиши Windows: любое изменение громкости заодно включает звук.
-    static void Change(float delta)
-    {
-        WithVolume(v =>
-        {
-            float level;
-            v.GetMasterVolumeLevelScalar(out level);
-            v.SetMasterVolumeLevelScalar(Math.Max(0f, Math.Min(1f, level + delta)), Guid.Empty);
-            v.SetMute(false, Guid.Empty);
-        });
+        IntPtr shell = FindWindow("Shell_TrayWnd", null);
+        if (shell == IntPtr.Zero) { Program.Log("Audio: Shell_TrayWnd not found"); return; }
+        PostMessage(shell, WM_APPCOMMAND, shell, (IntPtr)(command << 16));
     }
 
     public static void Refresh(bool force)
@@ -190,4 +165,7 @@ static class Audio
         void SetMute([MarshalAs(UnmanagedType.Bool)] bool mute, [MarshalAs(UnmanagedType.LPStruct)] Guid context);
         void GetMute([MarshalAs(UnmanagedType.Bool)] out bool mute);
     }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindow(string cls, string title);
+    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd, int message, IntPtr wparam, IntPtr lparam);
 }
