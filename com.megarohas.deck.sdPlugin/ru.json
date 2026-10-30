@@ -42,6 +42,10 @@
     "Name": "Режим Xbox",
     "Tooltip": "Включить / выключить режим Xbox в Windows 11 (Win+F11); горит, пока он включён"
   },
+  "com.megarohas.deck.gaming.playnite": {
+    "Name": "Playnite",
+    "Tooltip": "Открыть / закрыть Playnite в полноэкранном режиме; горит, пока открыт"
+  },
   "com.megarohas.deck.gaming.couch_bigpicture": {
     "Name": "Диван: Big Picture",
     "Tooltip": "Картинка только на ТВ, затем Steam Big Picture"
@@ -49,6 +53,10 @@
   "com.megarohas.deck.gaming.couch_xbox": {
     "Name": "Диван: режим Xbox",
     "Tooltip": "Картинка только на ТВ, затем режим Xbox (если ещё не включён)"
+  },
+  "com.megarohas.deck.gaming.couch_playnite": {
+    "Name": "Диван: Playnite",
+    "Tooltip": "Картинка только на ТВ, затем полноэкранный Playnite (Big Picture и режим Xbox закрываются)"
   },
   "com.megarohas.deck.tools.desktop": {
     "Name": "Рабочий стол",
@@ -60,6 +68,6 @@
   },
   "com.megarohas.deck.gaming.office": {
     "Name": "Офис",
-    "Tooltip": "Обратно за стол: выйти из режима Xbox, закрыть Big Picture (Steam и Xbox остаются запущены), картинка только на монитор, свернуть все окна"
+    "Tooltip": "Обратно за стол: выйти из режима Xbox, закрыть Big Picture и полноэкранный Playnite (сами приложения остаются запущены), картинка только на монитор, свернуть все окна"
   }
 }

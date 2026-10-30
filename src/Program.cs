@@ -4,7 +4,9 @@
 // Сборка: build.ps1 (csc из .NET Framework 4, C# 5).
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Management;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -103,6 +105,29 @@ static class Program
         {
             try { ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None).Wait(); }
             catch (Exception e) { Log(e.Message); }
+        }
+    }
+
+    // Запуск программы, которая должна пережить плагин. Софт деки держит себя и плагины в Windows Job и при перезапуске
+    // убивает всех потомков, а процесс через WMI (Win32_Process.Create) порождает служба WmiPrvSE, и в Job он не попадает.
+    // (Через explorer.exe из Job не выходит.)
+    public static int Launch(string exe, string args, string dir)
+    {
+        try
+        {
+            using (var processClass = new ManagementClass("Win32_Process"))
+            {
+                var call = new object[] { "\"" + exe + "\" " + args, dir, null, null };
+                object result = processClass.InvokeMethod("Create", call);
+                if (Convert.ToUInt32(result) != 0) throw new Exception("Win32_Process.Create returned " + result);
+                return Convert.ToInt32(call[3]);  // out ProcessId
+            }
+        }
+        catch (Exception e)
+        {
+            Log("Launch via WMI: " + e.Message);
+            using (var p = Process.Start(new ProcessStartInfo(exe, args) { WorkingDirectory = dir, UseShellExecute = false }))
+                return p.Id;
         }
     }
 

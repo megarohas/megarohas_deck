@@ -15,8 +15,8 @@
 
 A plugin for the **fifine AmpliGame D6** stream controller (and other decks running the **Mirabox StreamDock** software)
 that turns it into a couch-and-desk remote for a Windows gaming PC. Every key **shows the real state**: the active
-screen mode lights up, the volume keys draw a level bar, the record key turns red and counts time, Big Picture and
-Xbox mode glow while they are open — even when you changed something with the keyboard instead of the deck.
+screen mode lights up, the volume keys draw a level bar, the record key turns red and counts time, Big Picture,
+Xbox mode and Playnite glow while they are open — even when you changed something with the keyboard instead of the deck.
 
 One small `.exe`, no runtime to install (it uses the .NET Framework that ships with Windows), no background services.
 
@@ -64,12 +64,16 @@ camera only turns on in scenes that show it — never during a deck recording.
 |---|---|
 | <img src="com.megarohas.deck.sdPlugin/images/bigpicture_on.png" width="56"> **Steam Big Picture** | open / close Big Picture; lit while it is open |
 | <img src="com.megarohas.deck.sdPlugin/images/xbox_mode_on.png" width="56"> **Xbox mode** | toggle Windows 11 Xbox mode (formerly Xbox Full Screen Experience); lit while it is on |
+| <img src="com.megarohas.deck.sdPlugin/images/playnite_on.png" width="56"> **Playnite** | open / close [Playnite](https://playnite.link) in fullscreen mode; lit while it is open |
 | <img src="com.megarohas.deck.sdPlugin/images/couch_bigpicture.png" width="56"> **Couch: Big Picture** | TV only → Big Picture |
 | <img src="com.megarohas.deck.sdPlugin/images/couch_xbox.png" width="56"> **Couch: Xbox mode** | TV only → Xbox mode |
-| <img src="com.megarohas.deck.sdPlugin/images/office.png" width="56"> **Office** | back to the desk: leave Xbox mode, close Big Picture (the apps keep running), monitor only, minimize everything |
+| <img src="com.megarohas.deck.sdPlugin/images/couch_playnite.png" width="56"> **Couch: Playnite** | TV only → fullscreen Playnite |
+| <img src="com.megarohas.deck.sdPlugin/images/office.png" width="56"> **Office** | back to the desk: leave Xbox mode, close Big Picture and fullscreen Playnite (the apps keep running), monitor only, minimize everything |
 
-Big Picture and Xbox mode never run together: turning one on first turns the other off. Xbox mode is detected with the
-official `IsGamingFullScreenExperienceActive()` API.
+Big Picture, Xbox mode and fullscreen Playnite never run together: turning one on first turns the others off. Xbox mode
+is detected with the official `IsGamingFullScreenExperienceActive()` API. Playnite is expected in its default folder
+`%LOCALAPPDATA%\Playnite`; after its fullscreen mode closes, the plugin starts it again the way Windows autostart does, so
+with *Start minimized* turned on it stays out of the way.
 
 ### Windows
 
@@ -131,7 +135,7 @@ every incoming message to `MegarohasDeck.log`.
 | `src/Displays.cs` | screen modes (`SetDisplayConfig` / `QueryDisplayConfig`) |
 | `src/Audio.cs` | volume through the shell's media-key commands (`WM_APPCOMMAND`), live level bar via Core Audio |
 | `src/Record.cs` | OBS via obs-websocket v5 |
-| `src/Gaming.cs` | Big Picture, Xbox mode, Couch, Office |
+| `src/Gaming.cs` | Big Picture, Xbox mode, Playnite, Couch, Office |
 | `src/Tools.cs` | Desktop, Stay awake |
 
 ## License
@@ -148,7 +152,7 @@ every incoming message to `MegarohasDeck.log`.
 
 Плагин для стрим-деки **fifine AmpliGame D6** (и других дек на софте **Mirabox StreamDock**), который превращает её
 в пульт игрового ПК — и для дивана, и для стола. Каждая кнопка **показывает настоящее состояние**: горит текущий
-режим экранов, у громкости полоска уровня, кнопка записи краснеет и тикает временем, Big Picture и режим Xbox светятся,
+режим экранов, у громкости полоска уровня, кнопка записи краснеет и тикает временем, Big Picture, режим Xbox и Playnite светятся,
 пока открыты — даже если ты переключил что-то с клавиатуры, а не с деки.
 
 Один маленький `.exe`, ничего ставить не надо (используется .NET Framework, который уже есть в Windows), никаких служб.
@@ -197,12 +201,16 @@ every incoming message to `MegarohasDeck.log`.
 |---|---|
 | <img src="com.megarohas.deck.sdPlugin/images/bigpicture_on.png" width="56"> **Steam Big Picture** | открыть / закрыть Big Picture; горит, пока открыт |
 | <img src="com.megarohas.deck.sdPlugin/images/xbox_mode_on.png" width="56"> **Режим Xbox** | включить / выключить режим Xbox в Windows 11 (бывший Xbox Full Screen Experience); горит, пока включён |
+| <img src="com.megarohas.deck.sdPlugin/images/playnite_on.png" width="56"> **Playnite** | открыть / закрыть [Playnite](https://playnite.link) в полноэкранном режиме; горит, пока открыт |
 | <img src="com.megarohas.deck.sdPlugin/images/couch_bigpicture.png" width="56"> **Диван: Big Picture** | только ТВ → Big Picture |
 | <img src="com.megarohas.deck.sdPlugin/images/couch_xbox.png" width="56"> **Диван: режим Xbox** | только ТВ → режим Xbox |
-| <img src="com.megarohas.deck.sdPlugin/images/office.png" width="56"> **Офис** | обратно за стол: выйти из режима Xbox, закрыть Big Picture (сами приложения остаются запущенными), только монитор, свернуть всё |
+| <img src="com.megarohas.deck.sdPlugin/images/couch_playnite.png" width="56"> **Диван: Playnite** | только ТВ → полноэкранный Playnite |
+| <img src="com.megarohas.deck.sdPlugin/images/office.png" width="56"> **Офис** | обратно за стол: выйти из режима Xbox, закрыть Big Picture и полноэкранный Playnite (сами приложения остаются запущенными), только монитор, свернуть всё |
 
-Big Picture и режим Xbox никогда не работают вместе: включение одного сначала выключает другой. Режим Xbox
-определяется официальной функцией `IsGamingFullScreenExperienceActive()`.
+Big Picture, режим Xbox и полноэкранный Playnite никогда не работают вместе: включение одного сначала выключает
+остальные. Режим Xbox определяется официальной функцией `IsGamingFullScreenExperienceActive()`. Playnite ожидается в
+стандартной папке `%LOCALAPPDATA%\Playnite`; после закрытия полноэкранного режима плагин запускает его заново, как
+автозапуск Windows, и с настройкой запуска в свёрнутом виде он не мешает.
 
 ### Windows
 

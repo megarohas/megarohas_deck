@@ -128,9 +128,7 @@ static class Record
     // OBS 32 убрал флаг --disable-shutdown-check, а после аварийного закрытия молча ждёт ответа в окне «безопасный
     // режим». Отметки о запуске лежат в .sentinel — пока OBS не запущен, это остатки прошлого сеанса
     // (run_*, см. frontend/utility/CrashHandler.cpp), удаляем их, и окно не появляется.
-    // Сам OBS создаём через WMI (Win32_Process.Create): софт деки держит себя и плагины в Windows Job и при
-    // перезапуске убивает всех потомков — запущенный напрямую OBS погибал бы вместе с ним (и снова «аварийно»).
-    // Процесс от WMI порождает служба WmiPrvSE, в Job он не попадает. (Через explorer.exe из Job не выходит.)
+    // Сам OBS запускаем вне Job (Program.Launch): запущенный напрямую, он погибал бы вместе с софтом деки (и снова «аварийно»).
     // startScene — сцена, с которой OBS стартует (--scene): сразу deck_record, чтобы при запуске не ожила камера
     // из сцены, на которой OBS закрывали в прошлый раз.
     static int LaunchObs(string startScene)
@@ -142,22 +140,7 @@ static class Record
                 catch (Exception e) { Program.Log("Record: sentinel: " + e.Message); }
         string exe = Path.Combine(ObsDir, "obs64.exe"), args = "--minimize-to-tray --disable-updater";
         if (startScene != null) args += " --scene \"" + startScene + "\"";
-        try
-        {
-            using (var processClass = new ManagementClass("Win32_Process"))
-            {
-                var call = new object[] { "\"" + exe + "\" " + args, ObsDir, null, null };
-                object result = processClass.InvokeMethod("Create", call);
-                if (Convert.ToUInt32(result) != 0) throw new Exception("Win32_Process.Create returned " + result);
-                return Convert.ToInt32(call[3]);  // out ProcessId
-            }
-        }
-        catch (Exception e)
-        {
-            Program.Log("Record: start via WMI: " + e.Message);
-            using (var p = Process.Start(new ProcessStartInfo(exe, args) { WorkingDirectory = ObsDir, UseShellExecute = false }))
-                return p.Id;
-        }
+        return Program.Launch(exe, args, ObsDir);
     }
 
     static readonly string AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);

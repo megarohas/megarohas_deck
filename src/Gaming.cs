@@ -1,12 +1,13 @@
-// Игровые режимы: Steam Big Picture и режим Xbox в Windows 11 (бывший Xbox Full Screen Experience,
-// переключается сочетанием Win+F11). Обе кнопки горят, пока режим открыт. Вместе режимы не работают:
-// включение одного сначала выключает другой.
-// «Диван»: сначала картинка только на ТВ, потом Big Picture или режим Xbox.
-// «Офис»: обратно за стол — выйти из режима Xbox, закрыть Big Picture (сами Steam и Xbox остаются запущенными),
+// Игровые режимы: Steam Big Picture, режим Xbox в Windows 11 (бывший Xbox Full Screen Experience, переключается
+// сочетанием Win+F11) и полноэкранный Playnite. Кнопки горят, пока режим открыт. Вместе режимы не работают:
+// включение одного сначала выключает остальные.
+// «Диван»: сначала картинка только на ТВ, потом нужный режим.
+// «Офис»: обратно за стол — выйти из всех режимов (сами Steam, Xbox и Playnite остаются запущенными),
 // картинка только на монитор, свернуть все окна.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -15,13 +16,16 @@ static class Gaming
 {
     public const string Group = "gaming.";
 
-    // context → "bigpicture" / "xbox_mode"; под lock(keys).
+    static readonly string PlayniteDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Playnite");
+
+    // context → "bigpicture" / "xbox_mode" / "playnite"; под lock(keys).
     static readonly Dictionary<string, string> keys = new Dictionary<string, string>();
-    static int shownBigPicture = -1, shownXbox = -1;
+    static int shownBigPicture = -1, shownXbox = -1, shownPlaynite = -1;
 
     public static void Handle(string ev, string name, string context)
     {
-        if (name == "bigpicture" || name == "xbox_mode")
+        if (name == "bigpicture" || name == "xbox_mode" || name == "playnite")
         {
             switch (ev)
             {
@@ -34,6 +38,7 @@ static class Gaming
                     break;
                 case "keyDown":
                     if (name == "xbox_mode") Run(() => { if (XboxModeActive()) ExitXboxMode(); else EnterXboxMode(); });
+                    else if (name == "playnite") Run(() => { if (PlayniteOpen()) ClosePlaynite(); else OpenPlaynite(); });
                     else Run(() => { if (BigPictureOpen()) CloseBigPicture(); else OpenBigPicture(); });
                     break;
                 case "keyUp":
@@ -41,10 +46,12 @@ static class Gaming
                     break;
             }
         }
-        else if ((name == "couch_bigpicture" || name == "couch_xbox") && ev == "keyDown")
+        else if ((name == "couch_bigpicture" || name == "couch_xbox" || name == "couch_playnite") && ev == "keyDown")
         {
-            bool xbox = name == "couch_xbox";
-            Run(() => Couch(context, xbox));
+            Action open = OpenBigPicture;
+            if (name == "couch_xbox") open = EnterXboxMode;
+            else if (name == "couch_playnite") open = OpenPlaynite;
+            Run(() => Couch(context, open));
         }
         else if (name == "office" && ev == "keyDown")
         {
@@ -70,18 +77,19 @@ static class Gaming
     }
 
     // ТВ включается не мгновенно: после переключения ждём, пока картинка устаканится, и только потом режим.
-    static void Couch(string context, bool xbox)
+    static void Couch(string context, Action open)
     {
         int switched = Displays.SwitchTo(Displays.External);
         if (switched < 0) { Program.ShowAlert(context); return; }
         if (switched > 0) Thread.Sleep(3000);
-        if (xbox) EnterXboxMode(); else OpenBigPicture();
+        open();
     }
 
     static void Office(string context)
     {
         ExitXboxMode();
         CloseBigPicture();
+        ClosePlaynite();
         int switched = Displays.SwitchTo(Displays.Internal);
         if (switched < 0) Program.ShowAlert(context);
         if (switched > 0) Thread.Sleep(2500);  // окна переезжают на монитор — сворачиваем уже после
@@ -91,6 +99,7 @@ static class Gaming
     static void OpenBigPicture()
     {
         ExitXboxMode();
+        ClosePlaynite();
         if (!BigPictureOpen()) Open("steam://open/bigpicture");
     }
 
@@ -105,6 +114,7 @@ static class Gaming
     static void EnterXboxMode()
     {
         CloseBigPicture();
+        ClosePlaynite();
         if (XboxModeActive()) return;
         SendKeys(VK_LWIN, VK_F11);
         WaitFor(XboxModeActive, 5000);
@@ -119,6 +129,30 @@ static class Gaming
         Thread.Sleep(1000);
     }
 
+    // --startfullscreen переключает Playnite, уже запущенный в обычном режиме (с автозапуском он висит свёрнутым), или
+    // запускает его. Окно от фонового процесса Windows на передний план сама не пускает, поэтому активируем его сами.
+    static void OpenPlaynite()
+    {
+        ExitXboxMode();
+        CloseBigPicture();
+        if (!PlayniteOpen()) Program.Launch(Path.Combine(PlayniteDir, "Playnite.FullscreenApp.exe"), "--startfullscreen", PlayniteDir);
+        WaitFor(() => PlayniteWindow() != IntPtr.Zero, 20000);
+        IntPtr window = PlayniteWindow();
+        if (window != IntPtr.Zero) SwitchToThisWindow(window, true);
+    }
+
+    // Как и Steam, сам Playnite не выгружаем: после выхода запускаем его заново так же, как автозапуск Windows, и с настройкой
+    // «запускать свёрнутым» он никому не мешает. (--startdesktop вытащил бы обычное окно Playnite поверх всего.)
+    // Сразу после холодного старта Playnite обновляет библиотеку и закрывается не быстро.
+    static void ClosePlaynite()
+    {
+        if (!PlayniteOpen()) return;
+        string exe = Path.Combine(PlayniteDir, "Playnite.DesktopApp.exe");
+        Program.Launch(exe, "--shutdown", PlayniteDir);
+        WaitFor(() => !PlayniteOpen(), 30000);
+        Program.Launch(exe, "--hidesplashscreen --nolibupdate", PlayniteDir);
+    }
+
     static void WaitFor(Func<bool> done, int timeoutMs)
     {
         for (int waited = 0; waited < timeoutMs && !done(); waited += 250) Thread.Sleep(250);
@@ -126,13 +160,15 @@ static class Gaming
 
     public static void Refresh(bool force)
     {
-        int bigPicture = BigPictureOpen() ? 1 : 0, xbox = XboxModeActive() ? 1 : 0;
+        int bigPicture = BigPictureOpen() ? 1 : 0, xbox = XboxModeActive() ? 1 : 0, playnite = PlayniteOpen() ? 1 : 0;
         lock (keys)
         {
-            if (keys.Count == 0 || (!force && bigPicture == shownBigPicture && xbox == shownXbox)) return;
+            if (keys.Count == 0 || (!force && bigPicture == shownBigPicture && xbox == shownXbox && playnite == shownPlaynite)) return;
             shownBigPicture = bigPicture;
             shownXbox = xbox;
-            foreach (var key in keys) Program.SetState(key.Key, key.Value == "xbox_mode" ? xbox : bigPicture);
+            shownPlaynite = playnite;
+            foreach (var key in keys)
+                Program.SetState(key.Key, key.Value == "xbox_mode" ? xbox : key.Value == "playnite" ? playnite : bigPicture);
         }
     }
 
@@ -164,7 +200,25 @@ static class Gaming
     // Окно Big Picture у Steam называется «Steam Big Picture Mode» (класс SDL_app у steamwebhelper).
     static bool BigPictureOpen()
     {
-        bool found = false;
+        return VisibleWindow((cls, title) => cls == "SDL_app" && title.IndexOf("Big Picture", StringComparison.OrdinalIgnoreCase) >= 0) != IntPtr.Zero;
+    }
+
+    static bool PlayniteOpen()
+    {
+        var running = Process.GetProcessesByName("Playnite.FullscreenApp");
+        foreach (var p in running) p.Dispose();
+        return running.Length > 0;
+    }
+
+    static IntPtr PlayniteWindow()
+    {
+        return VisibleWindow((cls, title) => cls.StartsWith("HwndWrapper[Playnite.FullscreenApp") && title == "Playnite");
+    }
+
+    // Первое видимое окно верхнего уровня, подошедшее по (класс, заголовок).
+    static IntPtr VisibleWindow(Func<string, string, bool> match)
+    {
+        IntPtr found = IntPtr.Zero;
         EnumWindows((hwnd, _) =>
         {
             if (!IsWindowVisible(hwnd)) return true;
@@ -172,12 +226,9 @@ static class Gaming
             var cls = new StringBuilder(64);
             GetWindowText(hwnd, title, title.Capacity);
             GetClassName(hwnd, cls, cls.Capacity);
-            if (cls.ToString() == "SDL_app" && title.ToString().IndexOf("Big Picture", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                found = true;
-                return false;
-            }
-            return true;
+            if (!match(cls.ToString(), title.ToString())) return true;
+            found = hwnd;
+            return false;
         }, IntPtr.Zero);
         return found;
     }
@@ -222,6 +273,7 @@ static class Gaming
     [DllImport("user32.dll")] static extern uint SendInput(uint count, INPUT[] inputs, int size);
     [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc callback, IntPtr param);
     [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern void SwitchToThisWindow(IntPtr hwnd, bool altTab);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int max);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr hwnd, StringBuilder name, int max);
 }

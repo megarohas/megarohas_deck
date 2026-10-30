@@ -86,6 +86,7 @@ def tile(colors):
 
 STEAM = ("#93c5fd", "#3b82f6")
 XBOX = ("#86efac", "#16a34a")
+PLAYNITE = ("#f0abfc", "#67e8f9")
 
 PAD = ("M84 96H172C198 96 214 118 218 148C222 178 208 192 193 187C182 183 174 170 163 162H93C82 170 74 183 63 187"
        "C48 192 34 178 38 148C42 118 58 96 84 96Z")
@@ -107,6 +108,10 @@ def xbox_mode(g, w):
     corners = "M34 72V44H62M194 44H222V72M222 184V212H194M62 212H34V184"
     return (f'<path d="{corners}" fill="none" stroke="{g}" stroke-width="{w}" stroke-linecap="round" stroke-linejoin="round"/>'
             f'<g transform="translate(128,128) scale(.78) translate(-128,-142)">{gamepad(g, "none", w * 1.25)}</g>')
+
+
+def playnite(g, s, w):
+    return f'<g transform="translate(128,128) scale(1.08) translate(-128,-142)">{gamepad(g, s, w / 1.08)}</g>'
 
 
 DESKTOP = ("#c4b5fd", "#8b5cf6")
@@ -167,9 +172,12 @@ def mode_keys():
         "bigpicture_on": black + tile(STEAM) + bigpicture(DARK_GLYPH, LIT_SCREEN, 13),
         "xbox_mode_off": black + dark + f'<g opacity="0.75">{xbox_mode(XBOX[0], 13)}</g>',
         "xbox_mode_on": black + tile(XBOX) + xbox_mode(DARK_GLYPH, 13),
+        "playnite_off": black + dark + f'<g opacity="0.75">{playnite(PLAYNITE[0], "none", 13)}</g>',
+        "playnite_on": black + tile(PLAYNITE) + playnite(DARK_GLYPH, LIT_SCREEN, 13),
         "office": black + dark + f'<g opacity="0.9">{office_chair(OFFICE[0], 13)}</g>',
         "couch_bigpicture": black + dark + f'<g opacity="0.9">{couch(STEAM[0], 13, bigpicture(STEAM[0], "none", 22))}</g>',
         "couch_xbox": black + dark + f'<g opacity="0.9">{couch(XBOX[0], 13, xbox_mode(XBOX[0], 22))}</g>',
+        "couch_playnite": black + dark + f'<g opacity="0.9">{couch(PLAYNITE[0], 13, playnite(PLAYNITE[0], "none", 22))}</g>',
         "desktop": black + dark + f'<g opacity="0.9">{desktop(DESKTOP[0], 13)}</g>',
         "awake_off": black + dark + f'<g opacity="0.75" transform="translate(0,-28)">{coffee(COFFEE[0], "none", 13, False)}</g>',
         "awake_on": black + tile(COFFEE) + f'<g transform="translate(0,6)">{coffee(DARK_GLYPH, LIT_SCREEN, 13, True)}</g>',
@@ -232,7 +240,8 @@ def main():
     for name, body in mode_keys().items():
         render(body, 256, OUT / f"{name}.png")
     for name, body in (("bigpicture", bigpicture("#fff", "none", 18)),
-                       ("xbox_mode", xbox_mode("#fff", 18)), ("couch", sofa("#fff", 18)),
+                       ("xbox_mode", xbox_mode("#fff", 18)), ("playnite", playnite("#fff", "none", 18)),
+                       ("couch", sofa("#fff", 18)),
                        ("desktop", desktop("#fff", 18)), ("awake", coffee("#fff", "none", 18, True)),
                        ("office", office_chair("#fff", 18))):
         for size, suffix in ((20, ""), (40, "@2x")):
