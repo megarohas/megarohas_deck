@@ -1,7 +1,7 @@
 // Игровые режимы: Steam Big Picture, режим Xbox в Windows 11 (бывший Xbox Full Screen Experience, переключается
 // сочетанием Win+F11) и полноэкранный Playnite. Кнопки горят, пока режим открыт. Вместе режимы не работают:
 // включение одного сначала выключает остальные. Перед открытием режима экран расчищается (ClearScreen), после открытия
-// выход звука проверяется (ModeOpened).
+// курсор уходит в край экрана, а выход звука проверяется (ModeOpened).
 // «Диван»: сначала картинка только на ТВ, потом нужный режим.
 // «Офис»: обратно за стол — выйти из всех режимов (сами Steam, Xbox и Playnite остаются запущенными),
 // картинка только на монитор, свернуть все окна.
@@ -183,10 +183,14 @@ static class Gaming
         Thread.Sleep(200);
     }
 
-    // Режим открыт: проверяем выход звука.
+    // Режим открыт: проверяем выход звука и убираем курсор в правый край экрана, чтобы не висел посередине. Координаты
+    // в настоящих пикселях: масштаб у ТВ и монитора разный, а плагин сам по себе про него не знает.
     static void ModeOpened()
     {
         Audio.FollowScreen();
+        IntPtr dpi = SetThreadDpiAwarenessContext(new IntPtr(-4));  // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+        SetCursorPos(GetSystemMetrics(0 /* SM_CXSCREEN */) - 1, GetSystemMetrics(1 /* SM_CYSCREEN */) / 2);
+        SetThreadDpiAwarenessContext(dpi);
     }
 
     // Меню Пуск и поиск в Windows 11 — окна служб SearchHost и StartMenuExperienceHost.
@@ -324,6 +328,9 @@ static class Gaming
     [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr hwnd);
     [DllImport("user32.dll")] static extern void SwitchToThisWindow(IntPtr hwnd, bool altTab);
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll")] static extern int GetSystemMetrics(int index);
+    [DllImport("user32.dll")] static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
     [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int max);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr hwnd, StringBuilder name, int max);
