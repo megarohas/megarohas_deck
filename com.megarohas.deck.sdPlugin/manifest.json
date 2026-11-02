@@ -298,6 +298,23 @@
       "UUID": "com.megarohas.deck.tools.desktop"
     },
     {
+      "Icon": "images/list_screen_off",
+      "Name": "Screen off",
+      "States": [
+        {
+          "Image": "images/screen_off",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Turn the current screen off, like Windows does before sleep; any input or another tap turns it back on",
+      "UUID": "com.megarohas.deck.tools.screen_off"
+    },
+    {
       "Icon": "images/list_awake",
       "Name": "Stay awake",
       "States": [

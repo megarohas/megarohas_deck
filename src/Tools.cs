@@ -19,6 +19,17 @@ static class Tools
     const uint ES_CONTINUOUS = 0x80000000, ES_SYSTEM_REQUIRED = 0x1, ES_DISPLAY_REQUIRED = 0x2;
     [DllImport("kernel32.dll")] static extern uint SetThreadExecutionState(uint flags);
 
+    static readonly IntPtr HWND_BROADCAST = new IntPtr(0xFFFF), SC_MONITORPOWER = new IntPtr(0xF170), MONITOR_OFF = new IntPtr(2);
+    const int WM_SYSCOMMAND = 0x112;
+    const uint MOUSEEVENTF_MOVE = 1;
+    static uint screenOffAt;  // GetTickCount момента, когда погасили экран; 0 — не гасили
+
+    [StructLayout(LayoutKind.Sequential)] struct LASTINPUTINFO { public uint size, time; }
+
+    [DllImport("user32.dll")] static extern bool GetLastInputInfo(ref LASTINPUTINFO info);
+    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd, int message, IntPtr wparam, IntPtr lparam);
+    [DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, UIntPtr extra);
+
     static readonly HashSet<string> awakeKeys = new HashSet<string>();
     static int shown = -1;
     // Встроенный запрет сна: SetThreadExecutionState действует, пока жив поток, который его выставил.
@@ -29,6 +40,10 @@ static class Tools
         if (name == "desktop" && ev == "keyDown")
         {
             MinimizeAll();
+        }
+        else if (name == "screen_off" && ev == "keyDown")
+        {
+            ToggleScreen();
         }
         else if (name == "awake")
         {
@@ -106,6 +121,25 @@ static class Tools
         var stop = builtInStop;
         builtInStop = null;
         if (stop != null) stop.Set();
+    }
+
+    // Гасит экран, как Windows перед сном: сам ПК продолжает работать. Будит экран любой ввод, а нажатие деки вводом не
+    // считается, поэтому повторное нажатие будит его само: на диване мыши под рукой нет.
+    static void ToggleScreen()
+    {
+        var last = new LASTINPUTINFO { size = (uint)Marshal.SizeOf(typeof(LASTINPUTINFO)) };
+        bool off = screenOffAt != 0 && GetLastInputInfo(ref last) && unchecked((int)(last.time - screenOffAt)) <= 0;
+        if (off)
+        {
+            screenOffAt = 0;
+            mouse_event(MOUSEEVENTF_MOVE, 1, 0, 0, UIntPtr.Zero);
+            mouse_event(MOUSEEVENTF_MOVE, -1, 0, 0, UIntPtr.Zero);
+        }
+        else
+        {
+            screenOffAt = (uint)Environment.TickCount;
+            PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, MONITOR_OFF);
+        }
     }
 
     // Shell.Application.MinimizeAll — то же, что Win+M. Через COM, а не нажатием клавиш: Win+M перехватывает DisplayHotkeys.

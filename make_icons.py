@@ -150,7 +150,15 @@ def desktop(g, w):
             f'stroke-linecap="round" stroke-linejoin="round"/>')
 
 
+def screen_off(g, w):
+    """Monitor with a power symbol on it."""
+    return (f'{monitor(g, "none", w)}'
+            f'<path d="M108 88A30 30 0 1 0 148 88M128 76V108" fill="none" stroke="{g}" stroke-width="{w * 0.8:g}" '
+            f'stroke-linecap="round"/>')
+
+
 OFFICE = ("#7dd3fc", "#818cf8")
+SCREEN_OFF = ("#cbd5e1", "#64748b")
 
 
 def office_chair(g, w):
@@ -179,6 +187,7 @@ def mode_keys():
         "couch_xbox": black + dark + f'<g opacity="0.9">{couch(XBOX[0], 13, xbox_mode(XBOX[0], 22))}</g>',
         "couch_playnite": black + dark + f'<g opacity="0.9">{couch(PLAYNITE[0], 13, playnite(PLAYNITE[0], "none", 22))}</g>',
         "desktop": black + dark + f'<g opacity="0.9">{desktop(DESKTOP[0], 13)}</g>',
+        "screen_off": black + dark + f'<g opacity="0.9">{screen_off(SCREEN_OFF[0], 13)}</g>',
         "awake_off": black + dark + f'<g opacity="0.75" transform="translate(0,-28)">{coffee(COFFEE[0], "none", 13, False)}</g>',
         "awake_on": black + tile(COFFEE) + f'<g transform="translate(0,6)">{coffee(DARK_GLYPH, LIT_SCREEN, 13, True)}</g>',
     }
@@ -243,7 +252,7 @@ def main():
                        ("xbox_mode", xbox_mode("#fff", 18)), ("playnite", playnite("#fff", "none", 18)),
                        ("couch", sofa("#fff", 18)),
                        ("desktop", desktop("#fff", 18)), ("awake", coffee("#fff", "none", 18, True)),
-                       ("office", office_chair("#fff", 18))):
+                       ("office", office_chair("#fff", 18)), ("screen_off", screen_off("#fff", 18))):
         for size, suffix in ((20, ""), (40, "@2x")):
             render(body, size, OUT / f"list_{name}{suffix}.png")
     render(f'<rect width="256" height="256" fill="#000"/><rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'
