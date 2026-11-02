@@ -35,6 +35,10 @@ All keys live in the **megarohas** category of the deck software; drag them anyw
 
 The key of the current mode is lit and follows changes made with Win+P. If a switch fails (TV off), the key shows an alert.
 
+The sound follows the screen: after any switch, from the deck or with Win+P, the default output moves to the HDMI /
+DisplayPort output of the screen that is on. Connected Bluetooth headphones stay in use, and the virtual
+*Speakers (NVIDIA Broadcast)* output does not count as a real one.
+
 ### Volume
 
 | Key | What it does |
@@ -74,7 +78,7 @@ Big Picture, Xbox mode and fullscreen Playnite never run together: turning one o
 is detected with the official `IsGamingFullScreenExperienceActive()` API. Playnite is expected in its default folder
 `%LOCALAPPDATA%\Playnite`; after its fullscreen mode closes, the plugin starts it again the way Windows autostart does, so
 with *Start minimized* turned on it stays out of the way. Before a mode opens, the plugin closes the Start menu and
-minimizes all windows, so nothing stays on top of it or keeps the focus.
+minimizes all windows, so nothing stays on top of it or keeps the focus. Once it is open, the sound output is checked.
 
 ### Windows
 
@@ -135,7 +139,7 @@ every incoming message to `MegarohasDeck.log`.
 |---|---|
 | `src/Program.cs` | StreamDock WebSocket protocol, dispatch to modules |
 | `src/Displays.cs` | screen modes (`SetDisplayConfig` / `QueryDisplayConfig`) |
-| `src/Audio.cs` | volume through the shell's media-key commands (`WM_APPCOMMAND`), live level bar via Core Audio |
+| `src/Audio.cs` | volume through the shell's media-key commands (`WM_APPCOMMAND`), live level bar via Core Audio, sound output that follows the screen (`IPolicyConfig`) |
 | `src/Record.cs` | OBS via obs-websocket v5 |
 | `src/Gaming.cs` | Big Picture, Xbox mode, Playnite, Couch, Office |
 | `src/Tools.cs` | Desktop, Screen off, Stay awake |
@@ -173,6 +177,10 @@ every incoming message to `MegarohasDeck.log`.
 | <img src="com.megarohas.deck.sdPlugin/images/clone_on.png" width="56"> **Дублировать** | одна картинка на обоих |
 
 Кнопка текущего режима горит и следит и за Win+P. Если переключиться не вышло (ТВ выключен) — значок ошибки.
+
+Звук идёт за экраном: после любого переключения, с деки или через Win+P, выход по умолчанию переходит на HDMI / DisplayPort
+включённого экрана. Подключённые Bluetooth-наушники остаются в работе, а виртуальный выход *Speakers (NVIDIA Broadcast)*
+настоящим не считается.
 
 ### Громкость
 
@@ -213,7 +221,7 @@ Big Picture, режим Xbox и полноэкранный Playnite никогд
 остальные. Режим Xbox определяется официальной функцией `IsGamingFullScreenExperienceActive()`. Playnite ожидается в
 стандартной папке `%LOCALAPPDATA%\Playnite`; после закрытия полноэкранного режима плагин запускает его заново, как
 автозапуск Windows, и с настройкой запуска в свёрнутом виде он не мешает. Перед открытием режима плагин закрывает меню
-Пуск и сворачивает все окна, чтобы поверх него ничего не оставалось и фокус не уходил.
+Пуск и сворачивает все окна, чтобы поверх него ничего не оставалось и фокус не уходил. Когда режим открылся, выход звука проверяется.
 
 ### Windows
 

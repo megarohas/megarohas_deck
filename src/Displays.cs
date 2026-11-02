@@ -50,6 +50,7 @@ static class Displays
                     Program.ShowAlert(context);
                 }
                 Refresh(true);
+                Audio.FollowScreen();
                 break;
             case "keyUp":
                 // Софт сам перещёлкивает состояние двухрежимной кнопки после нажатия — возвращаем правду.
@@ -70,15 +71,19 @@ static class Displays
         return error == 0 ? 1 : -1;
     }
 
+    // Смена экрана любым способом, в том числе через Win+P, уводит за собой и звук.
     public static void Refresh(bool force)
     {
         uint current = CurrentTopology();
+        bool changed;
         lock (keys)
         {
+            changed = current != shown && current != 0 && shown != uint.MaxValue;
             if (!force && current == shown) return;
             shown = current;
             foreach (var key in keys) Program.SetState(key.Key, key.Value == current ? 1 : 0);
         }
+        if (changed) Audio.FollowScreen();
     }
 
     // Режим из базы конфигураций Windows: 1 / 2 / 4 / 8 как у Win+P, 0 — не удалось узнать.

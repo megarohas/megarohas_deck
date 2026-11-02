@@ -1,6 +1,7 @@
 // Игровые режимы: Steam Big Picture, режим Xbox в Windows 11 (бывший Xbox Full Screen Experience, переключается
 // сочетанием Win+F11) и полноэкранный Playnite. Кнопки горят, пока режим открыт. Вместе режимы не работают:
-// включение одного сначала выключает остальные, а перед открытием режима экран расчищается (ClearScreen).
+// включение одного сначала выключает остальные. Перед открытием режима экран расчищается (ClearScreen), после открытия
+// выход звука проверяется (ModeOpened).
 // «Диван»: сначала картинка только на ТВ, потом нужный режим.
 // «Офис»: обратно за стол — выйти из всех режимов (сами Steam, Xbox и Playnite остаются запущенными),
 // картинка только на монитор, свернуть все окна.
@@ -94,15 +95,20 @@ static class Gaming
         if (switched < 0) Program.ShowAlert(context);
         if (switched > 0) Thread.Sleep(2500);  // окна переезжают на монитор — сворачиваем уже после
         Tools.MinimizeAll();
+        Audio.FollowScreen();
     }
 
     static void OpenBigPicture()
     {
         ExitXboxMode();
         ClosePlaynite();
-        if (BigPictureOpen()) return;
-        ClearScreen();
-        Open("steam://open/bigpicture");
+        if (!BigPictureOpen())
+        {
+            ClearScreen();
+            Open("steam://open/bigpicture");
+            WaitFor(BigPictureOpen, 5000);
+        }
+        ModeOpened();
     }
 
     static void CloseBigPicture()
@@ -117,10 +123,13 @@ static class Gaming
     {
         CloseBigPicture();
         ClosePlaynite();
-        if (XboxModeActive()) return;
-        ClearScreen();
-        SendKeys(VK_LWIN, VK_F11);
-        WaitFor(XboxModeActive, 5000);
+        if (!XboxModeActive())
+        {
+            ClearScreen();
+            SendKeys(VK_LWIN, VK_F11);
+            WaitFor(XboxModeActive, 5000);
+        }
+        ModeOpened();
     }
 
     // После выхода даём рабочему столу секунду вернуться, прежде чем открывать что-то следующее.
@@ -146,6 +155,7 @@ static class Gaming
         WaitFor(() => PlayniteWindow() != IntPtr.Zero, 20000);
         IntPtr window = PlayniteWindow();
         if (window != IntPtr.Zero) SwitchToThisWindow(window, true);
+        ModeOpened();
     }
 
     // Как и Steam, сам Playnite не выгружаем: после выхода запускаем его заново так же, как автозапуск Windows, и с настройкой
@@ -171,6 +181,12 @@ static class Gaming
         }
         Tools.MinimizeAll();
         Thread.Sleep(200);
+    }
+
+    // Режим открыт: проверяем выход звука.
+    static void ModeOpened()
+    {
+        Audio.FollowScreen();
     }
 
     // Меню Пуск и поиск в Windows 11 — окна служб SearchHost и StartMenuExperienceHost.
