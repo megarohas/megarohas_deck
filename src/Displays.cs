@@ -25,6 +25,15 @@ static class Displays
     [DllImport("user32.dll")] static extern int GetDisplayConfigBufferSizes(uint flags, out uint numPaths, out uint numModes);
     [DllImport("user32.dll")] static extern int QueryDisplayConfig(uint flags, ref uint numPaths, IntPtr paths, ref uint numModes, IntPtr modes, out uint topology);
 
+    [StructLayout(LayoutKind.Sequential)] struct POINT { public int x, y; }
+    [StructLayout(LayoutKind.Sequential)] struct LASTINPUTINFO { public uint size, time; }
+
+    [DllImport("user32.dll")] static extern bool GetCursorPos(out POINT point);
+    [DllImport("user32.dll")] static extern bool SetCursorPos(int x, int y);
+    [DllImport("user32.dll")] static extern int GetSystemMetrics(int index);
+    [DllImport("user32.dll")] static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
+    [DllImport("user32.dll")] static extern bool GetLastInputInfo(ref LASTINPUTINFO info);
+
     // context кнопки на деке → её режим; под lock(keys) — его трогают поток чтения и таймер.
     static readonly Dictionary<string, uint> keys = new Dictionary<string, uint>();
     static uint shown = uint.MaxValue;  // режим, который сейчас подсвечен
@@ -83,7 +92,39 @@ static class Displays
             shown = current;
             foreach (var key in keys) Program.SetState(key.Key, key.Value == current ? 1 : 0);
         }
-        if (changed) Audio.FollowScreen();
+        if (!changed) return;
+        Audio.FollowScreen();
+        if (current == External) ParkCursor();
+    }
+
+    const int ParkMs = 15000;  // сколько держать курсор у края
+    static int parkRequest;    // номер последнего запроса ParkCursor: новый отменяет прежний
+
+    // Курсор к правому краю основного экрана, посередине по высоте, чтобы не висел посреди картинки. Координаты в настоящих
+    // пикселях: масштаб у ТВ и монитора разный, а плагин сам по себе про него не знает.
+    // Windows ставит курсор посреди экрана при каждой смене картинки, а ТВ, пока просыпается, может сменить её ещё раз,
+    // поэтому 15 секунд держим курсор у края, пока мышью и клавиатурой никто не пользовался.
+    public static void ParkCursor()
+    {
+        int request = Interlocked.Increment(ref parkRequest);
+        uint since = (uint)Environment.TickCount;
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            IntPtr dpi = SetThreadDpiAwarenessContext(new IntPtr(-4));  // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+            try
+            {
+                for (int waited = 0; waited <= ParkMs && request == Thread.VolatileRead(ref parkRequest); waited += 500)
+                {
+                    var last = new LASTINPUTINFO { size = (uint)Marshal.SizeOf(typeof(LASTINPUTINFO)) };
+                    if (GetLastInputInfo(ref last) && unchecked((int)(last.time - since)) > 0) return;  // мышь взяли в руки
+                    int x = GetSystemMetrics(0 /* SM_CXSCREEN */) - 1, y = GetSystemMetrics(1 /* SM_CYSCREEN */) / 2;
+                    POINT at;
+                    if (!GetCursorPos(out at) || at.x != x || at.y != y) SetCursorPos(x, y);
+                    Thread.Sleep(500);
+                }
+            }
+            finally { SetThreadDpiAwarenessContext(dpi); }
+        });
     }
 
     // Режим из базы конфигураций Windows: 1 / 2 / 4 / 8 как у Win+P, 0 — не удалось узнать.

@@ -39,6 +39,9 @@ The sound follows the screen: after any switch, from the deck or with Win+P, the
 DisplayPort output of the screen that is on. Connected Bluetooth headphones stay in use, and the virtual
 *Speakers (NVIDIA Broadcast)* output does not count as a real one.
 
+After a switch to the TV the cursor goes to the right edge of the screen and is kept there for 15 seconds, until the mouse
+or the keyboard is used: Windows centers it, sometimes more than once while the TV wakes up.
+
 ### Volume
 
 | Key | What it does |
@@ -182,6 +185,9 @@ every incoming message to `MegarohasDeck.log`.
 Звук идёт за экраном: после любого переключения, с деки или через Win+P, выход по умолчанию переходит на HDMI / DisplayPort
 включённого экрана. Подключённые Bluetooth-наушники остаются в работе, а виртуальный выход *Speakers (NVIDIA Broadcast)*
 настоящим не считается.
+
+После переключения на ТВ курсор уходит к правому краю экрана и держится там 15 секунд, пока не тронута мышь или клавиатура:
+Windows ставит его посередине, иногда не один раз, пока ТВ просыпается.
 
 ### Громкость
 
