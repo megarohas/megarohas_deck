@@ -23,11 +23,14 @@ static class Program
     static readonly string logPath = Path.Combine(Dir, "MegarohasDeck.log");
     // Файл debug рядом с exe — писать в лог все входящие сообщения.
     public static readonly bool Debug = File.Exists(Path.Combine(Dir, "debug"));
+    // Язык софта деки: по нему называются файлы, которые создаёт плагин.
+    public static string Language = "en";
 
     static void Main(string[] args)
     {
         string port = Arg(args, "-port"), uuid = Arg(args, "-pluginUUID"), register = Arg(args, "-registerEvent");
         if (port == null || uuid == null || register == null) return;
+        Language = AppLanguage(Arg(args, "-info"));
         try
         {
             ws.ConnectAsync(new Uri("ws://127.0.0.1:" + port), CancellationToken.None).Wait();
@@ -96,6 +99,22 @@ static class Program
     public static void ShowAlert(string context)
     {
         Send(new { @event = "showAlert", context = context });
+    }
+
+    public static void ShowOk(string context)
+    {
+        Send(new { @event = "showOk", context = context });
+    }
+
+    // -info: {"application":{"language":"ru",...},...}
+    static string AppLanguage(string info)
+    {
+        try
+        {
+            var root = json.Deserialize<Dictionary<string, object>>(info);
+            return (string)((Dictionary<string, object>)root["application"])["language"];
+        }
+        catch { return "en"; }
     }
 
     public static void Send(object message)

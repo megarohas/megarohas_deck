@@ -90,6 +90,7 @@ edge of the screen and the sound output is checked.
 |---|---|
 | <img src="com.megarohas.deck.sdPlugin/images/desktop.png" width="56"> **Desktop** | minimize all windows for real (like Win+M — unlike Win+D they do not pop back on a stray click) |
 | <img src="com.megarohas.deck.sdPlugin/images/screen_off.png" width="56"> **Screen off** | turn the current screen off, like Windows does before sleep; any input or another tap turns it back on |
+| <img src="com.megarohas.deck.sdPlugin/images/screenshot.png" width="56"> **Screenshot** | saves a PNG of the main screen to the desktop, named like *Screenshot 2026-11-09 14-35-07* (in Russian when the deck software is) |
 | <img src="com.megarohas.deck.sdPlugin/images/awake_on.png" width="56"> **Stay awake** | the screen does not turn off and the PC does not sleep while it is lit |
 
 *Stay awake* starts/closes the tiny [NeSpat](https://github.com/megarohas/megarohas_windows_tweaks/tree/main/stayawake)
@@ -146,7 +147,7 @@ every incoming message to `MegarohasDeck.log`.
 | `src/Audio.cs` | volume through the shell's media-key commands (`WM_APPCOMMAND`), live level bar via Core Audio, sound output that follows the screen (`IPolicyConfig`) |
 | `src/Record.cs` | OBS via obs-websocket v5 |
 | `src/Gaming.cs` | Big Picture, Xbox mode, Playnite, Couch, Office |
-| `src/Tools.cs` | Desktop, Screen off, Stay awake |
+| `src/Tools.cs` | Desktop, Screen off, Screenshot, Stay awake |
 
 ## License
 
@@ -237,6 +238,7 @@ Big Picture, режим Xbox и полноэкранный Playnite никогд
 |---|---|
 | <img src="com.megarohas.deck.sdPlugin/images/desktop.png" width="56"> **Рабочий стол** | сворачивает все окна по-настоящему (как Win+M — в отличие от Win+D окна не разворачиваются обратно от случайного клика) |
 | <img src="com.megarohas.deck.sdPlugin/images/screen_off.png" width="56"> **Погасить экран** | выключить текущий экран, как Windows перед сном; включается любым вводом или повторным нажатием |
+| <img src="com.megarohas.deck.sdPlugin/images/screenshot.png" width="56"> **Скриншот** | сохраняет PNG основного экрана на рабочий стол с именем вроде *Скриншот 2026-11-09 14-35-07* |
 | <img src="com.megarohas.deck.sdPlugin/images/awake_on.png" width="56"> **Не спать** | пока горит, экран не гаснет и ПК не засыпает |
 
 «Не спать» запускает/закрывает крошечное окно [NeSpat](https://github.com/megarohas/megarohas_windows_tweaks/tree/main/stayawake),

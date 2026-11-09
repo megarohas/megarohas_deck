@@ -315,6 +315,23 @@
       "UUID": "com.megarohas.deck.tools.screen_off"
     },
     {
+      "Icon": "images/list_screenshot",
+      "Name": "Screenshot",
+      "States": [
+        {
+          "Image": "images/screenshot",
+          "Name": "Default"
+        }
+      ],
+      "Controllers": [
+        "Keypad"
+      ],
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true,
+      "Tooltip": "Save a screenshot of the main screen to the desktop, named with the date and time",
+      "UUID": "com.megarohas.deck.tools.screenshot"
+    },
+    {
       "Icon": "images/list_awake",
       "Name": "Stay awake",
       "States": [
@@ -362,7 +379,7 @@
   "CategoryIcon": "images/category",
   "CodePath": "MegarohasDeck.exe",
   "Description": "Personal deck actions by megarohas: displays, volume, recording, gaming modes and desktop tools with live state",
-  "Version": "1.4.1",
+  "Version": "1.5.0",
   "URL": "https://github.com/megarohas/megarohas_deck",
   "OS": [
     {

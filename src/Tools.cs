@@ -1,10 +1,13 @@
 // Мелочи для Windows: «Рабочий стол» — свернуть все окна по-настоящему (как Win+M, а не переключатель Win+D,
-// который разворачивает всё обратно) и «Не спать» — пока включено, экран не гаснет и ПК не засыпает.
+// который разворачивает всё обратно), «Погасить экран», «Скриншот» основного экрана на рабочий стол
+// и «Не спать» — пока включено, экран не гаснет и ПК не засыпает.
 // «Не спать» запускает/закрывает утилиту NeSpat.exe (megarohas_windows_tweaks/stayawake), если она установлена
 // в %LOCALAPPDATA%\Programs\NeSpat; иначе плагин сам держит запрет сна. Кнопка горит, пока запрет действует.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -30,6 +33,14 @@ static class Tools
     [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hwnd, int message, IntPtr wparam, IntPtr lparam);
     [DllImport("user32.dll")] static extern void mouse_event(uint flags, int dx, int dy, uint data, UIntPtr extra);
 
+    const int SRCCOPY = 0x00CC0020, CAPTUREBLT = 0x40000000;
+
+    [DllImport("user32.dll")] static extern int GetSystemMetrics(int index);
+    [DllImport("user32.dll")] static extern IntPtr SetThreadDpiAwarenessContext(IntPtr context);
+    [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr hwnd);
+    [DllImport("user32.dll")] static extern int ReleaseDC(IntPtr hwnd, IntPtr hdc);
+    [DllImport("gdi32.dll")] static extern bool BitBlt(IntPtr target, int x, int y, int width, int height, IntPtr source, int sourceX, int sourceY, int rop);
+
     static readonly HashSet<string> awakeKeys = new HashSet<string>();
     static int shown = -1;
     // Встроенный запрет сна: SetThreadExecutionState действует, пока жив поток, который его выставил.
@@ -44,6 +55,10 @@ static class Tools
         else if (name == "screen_off" && ev == "keyDown")
         {
             ToggleScreen();
+        }
+        else if (name == "screenshot" && ev == "keyDown")
+        {
+            ThreadPool.QueueUserWorkItem(_ => Screenshot(context));
         }
         else if (name == "awake")
         {
@@ -140,6 +155,39 @@ static class Tools
             screenOffAt = (uint)Environment.TickCount;
             PostMessage(HWND_BROADCAST, WM_SYSCOMMAND, SC_MONITORPOWER, MONITOR_OFF);
         }
+    }
+
+    // Снимок основного экрана в PNG на рабочий стол, в имени дата и время до секунды. Размеры и координаты в настоящих
+    // пикселях, иначе при масштабе 125 % снимок вышел бы урезанным. Курсор, как и в снимках Windows, не попадает.
+    static void Screenshot(string context)
+    {
+        IntPtr dpi = SetThreadDpiAwarenessContext(new IntPtr(-4));  // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+        try
+        {
+            string name = (Program.Language == "ru" ? "Скриншот " : "Screenshot ") + DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss");
+            int width = GetSystemMetrics(0 /* SM_CXSCREEN */), height = GetSystemMetrics(1 /* SM_CYSCREEN */);
+            using (var image = new Bitmap(width, height))
+            {
+                using (var g = Graphics.FromImage(image))
+                {
+                    IntPtr screen = GetDC(IntPtr.Zero), target = g.GetHdc();
+                    BitBlt(target, 0, 0, width, height, screen, 0, 0, SRCCOPY | CAPTUREBLT);
+                    g.ReleaseHdc(target);
+                    ReleaseDC(IntPtr.Zero, screen);
+                }
+                string desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                string path = Path.Combine(desktop, name + ".png");
+                for (int n = 2; File.Exists(path); n++) path = Path.Combine(desktop, name + " (" + n + ").png");
+                image.Save(path, ImageFormat.Png);
+            }
+            Program.ShowOk(context);
+        }
+        catch (Exception e)
+        {
+            Program.Log("Tools: screenshot: " + e.Message);
+            Program.ShowAlert(context);
+        }
+        finally { SetThreadDpiAwarenessContext(dpi); }
     }
 
     // Shell.Application.MinimizeAll — то же, что Win+M. Через COM, а не нажатием клавиш: Win+M перехватывает DisplayHotkeys.

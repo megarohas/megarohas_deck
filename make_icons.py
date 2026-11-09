@@ -157,8 +157,16 @@ def screen_off(g, w):
             f'stroke-linecap="round"/>')
 
 
+def camera(g, w):
+    return (f'<rect x="36" y="80" width="184" height="124" rx="22" fill="none" stroke="{g}" stroke-width="{w}"/>'
+            f'<path d="M94 80L106 56H150L162 80" fill="none" stroke="{g}" stroke-width="{w}" stroke-linejoin="round"/>'
+            f'<circle cx="128" cy="142" r="34" fill="none" stroke="{g}" stroke-width="{w}"/>'
+            f'<circle cx="188" cy="108" r="{w * 0.6:g}" fill="{g}"/>')
+
+
 OFFICE = ("#7dd3fc", "#818cf8")
 SCREEN_OFF = ("#cbd5e1", "#64748b")
+SCREENSHOT = ("#d9f99d", "#65a30d")
 
 
 def office_chair(g, w):
@@ -188,6 +196,7 @@ def mode_keys():
         "couch_playnite": black + dark + f'<g opacity="0.9">{couch(PLAYNITE[0], 13, playnite(PLAYNITE[0], "none", 22))}</g>',
         "desktop": black + dark + f'<g opacity="0.9">{desktop(DESKTOP[0], 13)}</g>',
         "screen_off": black + dark + f'<g opacity="0.9">{screen_off(SCREEN_OFF[0], 13)}</g>',
+        "screenshot": black + dark + f'<g opacity="0.9">{camera(SCREENSHOT[0], 13)}</g>',
         "awake_off": black + dark + f'<g opacity="0.75" transform="translate(0,-28)">{coffee(COFFEE[0], "none", 13, False)}</g>',
         "awake_on": black + tile(COFFEE) + f'<g transform="translate(0,6)">{coffee(DARK_GLYPH, LIT_SCREEN, 13, True)}</g>',
     }
@@ -252,7 +261,8 @@ def main():
                        ("xbox_mode", xbox_mode("#fff", 18)), ("playnite", playnite("#fff", "none", 18)),
                        ("couch", sofa("#fff", 18)),
                        ("desktop", desktop("#fff", 18)), ("awake", coffee("#fff", "none", 18, True)),
-                       ("office", office_chair("#fff", 18)), ("screen_off", screen_off("#fff", 18))):
+                       ("office", office_chair("#fff", 18)), ("screen_off", screen_off("#fff", 18)),
+                       ("screenshot", camera("#fff", 18))):
         for size, suffix in ((20, ""), (40, "@2x")):
             render(body, size, OUT / f"list_{name}{suffix}.png")
     render(f'<rect width="256" height="256" fill="#000"/><rect width="256" height="256" rx="44" fill="{OFF_TILE}"/>'
